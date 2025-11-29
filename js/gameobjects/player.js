@@ -4,6 +4,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite
     {
         super(scene, x, y, 'monkey');
 
+        this.setDepth(1);
         scene.add.existing(this);
         scene.physics.add.existing(this);
         this.setBounce(0);
@@ -13,8 +14,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite
         this.jumpStrength = 10;
 
         // states  
-        this.readyToJump = false;
-        this.dead = false;
 
         this.states = {
             idle:           0,
@@ -25,6 +24,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite
         }
 
         this.currentState = this.states.idle;
+
+
     }
 
 
@@ -50,6 +51,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite
     //         repeat: -1
     //     });
     // }
+
+    isDead()
+    {
+        return this.currentState == this.states.dead;
+    }
 
     moveLeft()
     {
@@ -112,11 +118,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite
     die()
     {
         this.currentState = this.states.dead;
-        this.dead = true;
         this.body.setAllowGravity(false);
         this.setVelocityX(0);
         this.setVelocityY(0);
-        this.readyToJump = false;
         console.log("dead monkey");
     }
 }

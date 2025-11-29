@@ -5,8 +5,8 @@ import { GameOver } from './scenes/gameOver.js';
 import { Preloader } from './scenes/preloader.js';
 
 const config = {
-  width: 800,
-  height: 600,
+  width: constants.worldSize.width,
+  height: constants.worldSize.height,
   parent: 'container',
   backgroundColor: '#028af8',
   scale: {

@@ -1,4 +1,5 @@
 import { Player } from '../gameobjects/player.js';
+import { Tree } from '../gameobjects/tree.js';
 
 export class Game extends Phaser.Scene {
   constructor() {
@@ -6,31 +7,79 @@ export class Game extends Phaser.Scene {
 
   }
 
-  create() {
-    // this.add.image(400, 300, 'sky'); //.setOrigin(0,0);
-    // this.add.image(400, 300, 'star');
+  create() {    
+    console.log("World size: ", constants.worldSize);
+    // console.log(Math);
 
-    this.player = new Player(this, 400, 50); 
-    // this.player.body.mass = 1;
-    // console.log("playser mass", this.player.body.mass);
+    this.player = new Player(
+      this, 
+      constants.gridSize * 2.5, 
+      50
+    ); 
+    this.player.currentState = this.player.states.readyToJump;
 
+    this.branches = this.physics.add.staticGroup();
+    this.physics.add.collider(this.player, this.branches);
+
+    this.trees = [];
+
+    this.addTree(2.5, 10);
+    this.addBranch(2.5, 7, 4, 0.2);
+
+    this.addTree(9.5, 10);
+    this.addBranch(10.5, 8, 3, 0.2);
+    this.addBranch(8.5, 4, 3, 0.2);
 
     // TODO: Die when touch ground
     this.platforms = this.physics.add.staticGroup();
 
-    var sprite = this.add.sprite(400, 568, 'green');
-    sprite.setScale(14, 1);
+    var sprite = this.add.sprite(
+      constants.worldSize.width / 2, 
+      constants.gridSize * 11, 
+      'green'
+    );
+    sprite.setScale(16, 2);
     this.platforms.add(sprite);
-
 
     this.physics.add.collider(this.player, this.platforms);
 
+    // input
+    this.pointer = this.input.activePointer;
+    this.input.mouse.disableContextMenu();
+
+    this.cursors = this.input.keyboard.createCursorKeys();
+
+    // aiming
+    this.reticle = this.add.sprite(
+      constants.gridSize * constants.worldSize.unitWidth / 2, 
+      constants.gridSize * (constants.worldSize.unitHeight - 1), 
+      'reticle'
+    );
+    this.aimStartPosition = { x: 0, y: 0 };
+    // this.reticle.visible = false;
+
+    this.addWorldBorders();
+
+    // var grid = this.add.sprite(
+    //   constants.worldSize.width / 2, 
+    //   constants.worldSize.height / 2, 
+    //   'grid'
+    // );
+
+    this.addDebugText();
+
+    this.graphics = this.add.graphics();
+    this.graphics.lineStyle(1, 0xffffff, 1); // for debug
+  }
+
+  addWorldBorders()
+  {
 
     // die when hit the left side off the screen
     this.worldBorderLeft = this.physics.add.staticGroup();
 
-    var sprite = this.add.sprite(30,120, 'red');
-    sprite.setScale(1, 14);
+    var sprite = this.add.sprite(0, constants.gridSize * 5, 'red');
+    sprite.setScale(1, 10);
     this.worldBorderLeft.add(sprite);
 
     this.physics.add.overlap(
@@ -47,8 +96,12 @@ export class Game extends Phaser.Scene {
     // bounce when hit right side off screen
     this.worldBorderRight = this.physics.add.staticGroup();
 
-    var sprite = this.add.sprite(770,120, 'green');
-    sprite.setScale(1, 14);
+    var sprite = this.add.sprite(
+      constants.gridSize * constants.worldSize.unitWidth,
+      constants.gridSize * 5, 
+    'green');
+
+    sprite.setScale(1, 10);
     this.worldBorderRight.add(sprite);
 
     this.physics.add.overlap(
@@ -60,28 +113,10 @@ export class Game extends Phaser.Scene {
       },
       this
     );
+  }
 
-    // input
-    this.pointer = this.input.activePointer;
-    this.input.mouse.disableContextMenu();
-
-    // console.log(this.pointer);
-            // console.log(Math);
-
-
-    this.cursors = this.input.keyboard.createCursorKeys();
-
-    // aiming
-    this.reticle = this.add.sprite(400, 568, 'reticle');
-    this.aimStartPosition = { x: 0, y: 0 };
-    // this.reticle.visible = false;
-
-
-    this.player.readyToJump = true;
-    this.player.currentState = this.player.states.readyToJump;
-
-    this.drawLine();
-
+  addDebugText()
+  {
     this.debugText = this.add.bitmapText(
       0,
       10,
@@ -98,59 +133,64 @@ export class Game extends Phaser.Scene {
       20
     );
 
-    this.graphics = this.add.graphics();
-    this.graphics.lineStyle(1, 0xffffff, 1); // for debug
-
-
-    // this.stars = this.physics.add.group({
-    //     key: 'star',
-    //     repeat: 11,
-    //     setXY: { x: 12, y: 0, stepX: 70 }
-    // });
-
-    // this.stars.children.iterate(child => 
-    // {
-    //     child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
-    // });
-
-    // this.physics.add.collider(this.stars, this.platforms);
-
-    // this.physics.add.overlap(this.player, this.stars, this.collectStars, null, this);
-
-    // this.score = 0;
-    // this.scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#000' });
-
-    // this.bombs = this.physics.add.group();
-
-    // this.physics.add.collider(this.bombs, this.platforms);
-    // this.physics.add.collider(this.player, this.bombs, this.hitBomb, null, this);
+    this.playerStateText = this.add.bitmapText(
+      20,
+      20,
+      "arcade",
+      this.player.currentState,
+      20
+    );
   }
 
   playerHitWorldBorderLeft(player, border) {
-    if (!player.dead) {
+    if (!player.isDead()) {
       // this.playAudio("holeshout");
       // hole.setAlpha(1);
       // player.setAlpha(0);
       // this.cameras.main.shake(30);
-      this.player.die();
+      player.die();
       // player.death();
       // this.restartScene();
     }
   }
 
   playerHitWorldBorderRight(player, border) {
-    if (!player.dead) {
+    if (!player.isDead()) {
       // this.playAudio("holeshout");
       // hole.setAlpha(1);
       // player.setAlpha(0);
       // this.cameras.main.shake(20);
-      this.player.turn();
+      player.turn();
       // player.death();
       // this.restartScene();
     }
   }
 
+  addTree(x, y)
+  {
+    var tree = new Tree(
+      this, 
+      this.player,
+      constants.gridSize * x, 
+      constants.gridSize * y
+    );
+    this.trees[this.trees.length] = tree;
+  }
+
+  addBranch(x, y, scaleX, scaleY)
+  {
+    var branch = this.add.sprite(
+                      constants.gridSize * x, 
+                      constants.gridSize * y, 
+                      'brown'
+                    )
+                    .setScale(scaleX, scaleY);
+    this.branches.add(branch);
+  }
+
   update() {
+    // this.tree.setPosition(this.tree.position.x, this.tree.position.y);
+    // this.tree.updatePosition();
     if (this.path) 
     {
       this.graphics.clear();
@@ -170,6 +210,13 @@ export class Game extends Phaser.Scene {
     if (this.cursors.up.isDown) {
         this.player.jump();
     }
+
+    // this.playerStateText.text = this.player.currentState;
+    this.playerStateText.text = this.player.body.blocked.down;
+    this.playerStateText.setPosition(
+      this.player.body.position.x - 15, 
+      this.player.body.position.y - 30
+    );
 
     switch(this.player.currentState)
     {
@@ -213,45 +260,38 @@ export class Game extends Phaser.Scene {
             this.debugText2.text = "x: " + this.throwDirection.x + 
                                   " y: " + this.throwDirection.y;
 
-            this.simulateTrajectory(this.vec2multiply(this.throwDirection, 500));
+            this.simulateTrajectory(this.vec2multiply(this.throwDirection, 400));
           }
           else
           {
-            this.player.jump(this.throwDirection.x * 1.2, this.throwDirection.y * -1.2);
+            if(this.aimHeading.x == 0 && this.aimHeading.y == 0)
+            {
+              console.log("Cannot jump. throwDirection is zero");
+              this.player.currentState = this.player.states.readyToJump;
+              return;
+            }
+            this.player.jump(this.throwDirection.x * 1.1, this.throwDirection.y * -1.1);
             this.player.currentState = this.player.states.jumping;
             console.log("Pointer up");
           }
         break;
 
-        // case this.player.states.jumping:
-        //   if(this.player.body.velocity.y > 0)
-        //   {
-        //     if(this.player.body.blocked.down)
-        //     {
-        //       this.player.currentState = this.player.states.readyToJump;
-        //     }
-        //   }
-        //   break;
-    }
-  }
+        case this.player.states.jumping:
+          // console.log(this.player.body.velocity.y);
 
-  drawLine()
-  {
-    const start = Phaser.Math.Between(100, 600);
-    this.path = new Phaser.Curves.Path(start, 0);
-    this.path.lineTo(start, Phaser.Math.Between(20, 50));
-    let max = 8;
-    let h = 500 / max;
-    for (let i = 0; i < max; i++) {
-    if (i % 2 === 0) {
-    this.path.lineTo(start, 50 + h * (i + 1));
-    } else {
-    this.path.lineTo(start + 300, 50 + h * (i + 1));
+          if(this.player.body.blocked.down)
+          {
+            if(this.player.body.velocity.y < 0)
+            {
+              console.log("Player is moving up. Cannot land");
+              return;
+            }
+
+            console.log("Player has landed");
+            this.player.currentState = this.player.states.readyToJump;
+          }
+          break;
     }
-    }
-    this.path.lineTo(start, this.scene.height + 50);
-    this.graphics = this.add.graphics();
-    this.graphics.lineStyle(1, 0xffffff, 1); // for debug
   }
 
   simulateTrajectory(velocity)
@@ -274,46 +314,9 @@ export class Game extends Phaser.Scene {
       // console.log("1 ", time, point);
 
       // // TODO: Replace 500 with gravity
-      point.y = this.aimStartPosition.y + startVelocity.y * time + (360 / 2 * time * time);
+      point.y = this.aimStartPosition.y + startVelocity.y * time + (288 / 2 * time * time);
 
-      //     // _lineRenderer.SetPosition(i, point);
       this.path.lineTo(point.x, point.y);
-      // console.log("2 ", time,  point);
-
-      // // check if line has hit floor
-      // if (hit.collider)
-      // {
-      //   _lineRenderer.SetPosition(i, hit.point);
-      //   _lineRenderer.positionCount = i + 1;
-
-      //   _landingPoint = hit.point;
-
-      //   // does landing point fall outside court bounds?
-      //   var landingPointX = Mathf.Abs(_landingPoint.x);
-
-      //   if (landingPointX > (float)GameManager.BorderRightPosition)
-      //   {
-      //     var diff = landingPointX - (float)GameManager.BorderRightPosition;
-      //     diff = Mathf.Clamp(diff, 0, (float)GameManager.BorderRightPosition / 2);
-      //     landingPointX = (float)GameManager.BorderRightPosition - diff;
-      //     landingPointX *= Mathf.Sign(_landingPoint.x);
-
-      //     _landingPoint.x = landingPointX;
-      //     _idealHitPoint.x = landingPointX;
-
-      //     // ideal hit point
-      //     // var idealHitPointX = Mathf.Abs(_idealHitPoint.x);
-
-      //     // diff = idealHitPointX - (float)GameManager.BorderRightPosition;
-      //     // diff = Mathf.Clamp(diff, 0, (float)GameManager.BorderRightPosition / 2);
-      //     // idealHitPointX = (float)GameManager.BorderRightPosition - diff;
-      //     // idealHitPointX *= Mathf.Sign(transform.position.x);
-
-      //     // _idealHitPoint.x = idealHitPointX;
-      //   }
-      //   // exit for loop
-      //   return;
-      // }
     }
   }
 

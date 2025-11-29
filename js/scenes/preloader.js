@@ -38,9 +38,13 @@ export class Preloader extends Phaser.Scene {
     loadImages()
     {
         this.load.setPath('assets/png');
-        
-        this.load.image('monkey', 'monkey.png');
+
+        this.load.image('banana', 'reticle.png');
+        this.load.image('brown', 'brown.png');
+        this.load.image('darkbrown', 'darkbrown.png');
         this.load.image('green', 'green.png');
+        this.load.image('grid', 'grid.png');
+        this.load.image('monkey', 'monkee.png');
         this.load.image('red', 'red.png');
         this.load.image('reticle', 'reticle.png');
     }
