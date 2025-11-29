@@ -11,10 +11,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite
         // this.setCollideWorldBounds(true);
         // this.initAnimations();
 
-        this.jumpStrength = 10;
 
         // states  
-
         this.states = {
             idle:           0,
             readyToJump:    1,
@@ -112,7 +110,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite
         if(this.dead) return;
 
         this.setVelocityX(-this.body.velocity.x);
-        console.log("turn monkey");
+        // console.log("turn monkey");
     }
 
     die()

@@ -24,11 +24,13 @@ export class Game extends Phaser.Scene {
     this.trees = [];
 
     this.addTree(2.5, 10);
+    // this.addBranch(2.5, 4, 2, 0.2);
     this.addBranch(2.5, 7, 4, 0.2);
 
     this.addTree(9.5, 10);
+    // this.addBranch(10.5, 3, 2, 0.2);
+    this.addBranch(8.5, 5, 3, 0.2);
     this.addBranch(10.5, 8, 3, 0.2);
-    this.addBranch(8.5, 4, 3, 0.2);
 
     // TODO: Die when touch ground
     this.platforms = this.physics.add.staticGroup();
@@ -55,21 +57,26 @@ export class Game extends Phaser.Scene {
       constants.gridSize * (constants.worldSize.unitHeight - 1), 
       'reticle'
     );
+    this.reticle.setDepth(this.player.depth + 1);
     this.aimStartPosition = { x: 0, y: 0 };
     // this.reticle.visible = false;
 
     this.addWorldBorders();
 
-    // var grid = this.add.sprite(
-    //   constants.worldSize.width / 2, 
-    //   constants.worldSize.height / 2, 
-    //   'grid'
-    // );
+    var grid = this.add.sprite(
+      constants.worldSize.width / 2, 
+      constants.worldSize.height / 2, 
+      'grid'
+    );
+    grid.setAlpha(0.5);
 
     this.addDebugText();
 
     this.graphics = this.add.graphics();
     this.graphics.lineStyle(1, 0xffffff, 1); // for debug
+
+  // this.cameras.main.startFollow(this.player, true, 0.05, 0.05, 0, 240);
+    this.normalisedAimDistance = 0;
   }
 
   addWorldBorders()
@@ -189,8 +196,9 @@ export class Game extends Phaser.Scene {
   }
 
   update() {
-    // this.tree.setPosition(this.tree.position.x, this.tree.position.y);
-    // this.tree.updatePosition();
+    // this.cameras.main.x += -0.5;
+    this.cameras.main.x = constants.worldSize.width / 3 - this.player.body.x ;
+
     if (this.path) 
     {
       this.graphics.clear();
@@ -212,7 +220,9 @@ export class Game extends Phaser.Scene {
     }
 
     // this.playerStateText.text = this.player.currentState;
-    this.playerStateText.text = this.player.body.blocked.down;
+    // this.playerStateText.text = this.player.body.blocked.down;
+    // this.playerStateText.text = this.roundToTwoDecimalPlaces(this.normalisedAimDistance);
+    this.playerStateText.text = this.roundToTwoDecimalPlaces(this.player.body.x);
     this.playerStateText.setPosition(
       this.player.body.position.x - 15, 
       this.player.body.position.y - 30
@@ -224,12 +234,11 @@ export class Game extends Phaser.Scene {
         if(this.pointer.isDown)
         {
           // this.reticle.visible = true;
-          // console.log(this.pointer.position);
-          this.reticle.x = this.pointer.worldX;
-          this.reticle.y = this.pointer.worldY;
-                
-          this.aimStartPosition.x = this.pointer.worldX;
-          this.aimStartPosition.y = this.pointer.position.y;
+          this.aimStartPosition.x = this.player.body.x + this.player.body.width / 2;
+          this.aimStartPosition.y = this.player.body.y + this.player.body.height / 2;
+
+          this.reticle.x = this.aimStartPosition.x;
+          this.reticle.y = this.aimStartPosition.y;
 
           // console.log(this.aimStartPosition.x, this.aimStartPosition.y);
 
@@ -240,13 +249,22 @@ export class Game extends Phaser.Scene {
       case this.player.states.aiming:
           if(this.pointer.isDown)
           {
+            this.aimStartPosition.x = this.player.body.x + this.player.body.width / 2;
+            this.aimStartPosition.y = this.player.body.y + this.player.body.height / 2;
+
+            this.reticle.x = this.aimStartPosition.x;
+            this.reticle.y = this.aimStartPosition.y;
+
             this.aimHeading = {
-              x: this.aimStartPosition.x - this.pointer.worldX,
-              y: this.aimStartPosition.y - this.pointer.worldY 
+              x: this.pointer.worldX - this.aimStartPosition.x,
+              y: (this.pointer.worldY - 400) - this.aimStartPosition.y 
             };
 
             this.aimDistance = this.vec2magnitude(this.aimHeading.x, this.aimHeading.y);
-            // console.log(this.aimDistance);
+
+            this.normalisedAimDistance = this.aimDistance / constants.worldSize.width;
+            // console.log(this.normalisedAimDistance);
+
             // this.aimDirection = this.aimHeading / this.aimDistance; 
 
             // This is the normalized direction.
@@ -260,7 +278,8 @@ export class Game extends Phaser.Scene {
             this.debugText2.text = "x: " + this.throwDirection.x + 
                                   " y: " + this.throwDirection.y;
 
-            this.simulateTrajectory(this.vec2multiply(this.throwDirection, 400));
+            this.simulateTrajectory(
+              this.vec2multiply(this.throwDirection, 625 * this.normalisedAimDistance));
           }
           else
           {
@@ -270,9 +289,12 @@ export class Game extends Phaser.Scene {
               this.player.currentState = this.player.states.readyToJump;
               return;
             }
-            this.player.jump(this.throwDirection.x * 1.1, this.throwDirection.y * -1.1);
+            this.player.jump(
+              this.throwDirection.x * 1 * this.normalisedAimDistance, 
+              this.throwDirection.y * -1 * this.normalisedAimDistance
+            );
             this.player.currentState = this.player.states.jumping;
-            console.log("Pointer up");
+            // console.log("Pointer up");
           }
         break;
 
@@ -287,7 +309,7 @@ export class Game extends Phaser.Scene {
               return;
             }
 
-            console.log("Player has landed");
+            // console.log("Player has landed");
             this.player.currentState = this.player.states.readyToJump;
           }
           break;
@@ -303,6 +325,7 @@ export class Game extends Phaser.Scene {
     var positionCount = Math.ceil(linePoints / timeBetweenPoints) + 1;
 
     var startVelocity = this.vec2divide(velocity, this.player.body.mass);
+    startVelocity = this.vec2multiply(startVelocity, this.normalisedAimDistance);
 
     // this.path.clear();
     this.path = new Phaser.Curves.Path(this.aimStartPosition.x, this.aimStartPosition.y);
@@ -314,7 +337,8 @@ export class Game extends Phaser.Scene {
       // console.log("1 ", time, point);
 
       // // TODO: Replace 500 with gravity
-      point.y = this.aimStartPosition.y + startVelocity.y * time + (288 / 2 * time * time);
+      point.y = this.aimStartPosition.y + startVelocity.y * 
+                time + (625 / 2 * time * time);
 
       this.path.lineTo(point.x, point.y);
     }
@@ -344,6 +368,20 @@ export class Game extends Phaser.Scene {
   vec2addvec2(a, b)
   {
     return { x: a.x + b.x, y: a.y + b.y };
+  }
+
+  vec2normalise(a, b)
+  {
+    var sum = Math.abs(a) + Math.abs(b);
+
+    return { x: a / sum, y: b / sum };
+  }
+
+  roundToTwoDecimalPlaces(a)
+  {
+    a = a * 100;
+    var round = Math.round(a);
+    return round / 100;
   }
 
   collectStars(player, star)
