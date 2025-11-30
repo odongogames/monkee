@@ -12,8 +12,13 @@ export class Game extends Phaser.Scene {
     console.log("World size: ", constants.worldSize);
     // console.log(Math);
 
+    console.log(this.cameras.main);
+    // this.cameras.main.scaleManager.scaleMode = 1;
+
     this.cameras.main.setBounds(0, 0, 20920 * 2, 20080 * 2);
     this.physics.world.setBounds(0, 0, 20920 * 2, 20080 * 2);
+
+    this.score = 0;
 
     this.player = new Player(
       this, 
@@ -24,6 +29,10 @@ export class Game extends Phaser.Scene {
 
     this.branches = this.physics.add.staticGroup();
     this.physics.add.collider(this.player, this.branches);
+
+    this.bananas = this.physics.add.staticGroup();
+    // this.bananas.setAllowGravity(false);
+    this.physics.add.overlap(this.player, this.bananas, this.collectBanana, null, this);
 
     this.trees = [];
     this.treeStartX =  2.5;
@@ -70,9 +79,10 @@ export class Game extends Phaser.Scene {
 
     this.addWorldBorders();
 
-    this.worldGrid = new WorldGrid(this, 0, 0, 10, 0.25);
+    // this.worldGrid = new WorldGrid(this, 0, 0, 10, 0.25);
 
-    this.addDebugText();
+    // this.addDebugText();
+    this.addUIText();
 
     this.graphics = this.add.graphics();
     this.graphics.lineStyle(1, 0xffffff, 1); // for debug
@@ -83,6 +93,17 @@ export class Game extends Phaser.Scene {
     this.cameras.main.startFollow(this.player, true, 0.05, 0.05, -100, 240);
   }
 
+  collectBanana(player, banana)
+  {
+    // player.disableBody(true, true);
+    banana.destroy();
+    // banana.disableBody(true, true);
+
+    this.score++;
+    this.scoreText.setText(this.score);
+    // console.log("Collect banana [" + this.score + "]");
+  }
+
 
   update() {
     // this.cameras.main.x += -0.5;
@@ -90,6 +111,11 @@ export class Game extends Phaser.Scene {
     if(this.player.body.x > (this.lastTreePosition * constants.gridSize) - this.treeSpawnDistance)
     {
       this.generateTree();
+    }
+
+    if(this.player.body.y < 0 && this.player.body.velocity.y < 0)
+    {
+      this.player.body.velocity.y = -this.player.body.velocity.y;
     }
 
     if (this.path) 
@@ -115,11 +141,11 @@ export class Game extends Phaser.Scene {
     // this.playerStateText.text = this.player.currentState;
     // this.playerStateText.text = this.player.body.blocked.down;
     // this.playerStateText.text = this.roundToTwoDecimalPlaces(this.normalisedAimDistance);
-    this.playerStateText.text = roundToTwoDecimalPlaces(this.player.body.x);
-    this.playerStateText.setPosition(
-      this.player.body.position.x - 15, 
-      this.player.body.position.y - 30
-    );
+    // this.playerStateText.text = roundToTwoDecimalPlaces(this.player.body.velocity.y);
+    // this.playerStateText.setPosition(
+    //   this.player.body.position.x - 15, 
+    //   this.player.body.position.y - 30
+    // );
 
     switch(this.player.currentState)
     {
@@ -165,11 +191,11 @@ export class Game extends Phaser.Scene {
 
             this.throwDirection = this.aimDirection;
 
-            this.debugText.text = "x: " + Math.floor(this.aimHeading.x) + 
-                                  " y: " + Math.floor(this.aimHeading.y);
+            // this.debugText.text = "x: " + Math.floor(this.aimHeading.x) + 
+            //                       " y: " + Math.floor(this.aimHeading.y);
 
-            this.debugText2.text = "x: " + this.throwDirection.x + 
-                                  " y: " + this.throwDirection.y;
+            // this.debugText2.text = "x: " + this.throwDirection.x + 
+            //                       " y: " + this.throwDirection.y;
 
             this.simulateTrajectory(
               vec2multiply(this.throwDirection, 625 * this.normalisedAimDistance));
@@ -245,7 +271,7 @@ export class Game extends Phaser.Scene {
     // distance = distance + random;
     this.lastTreePosition = this.treeStartX + (this.trees.length * distance);
     this.addTree(this.lastTreePosition, 10);
-    console.log("spawn tree [" + this.trees.length + "] at " + this.lastTreePosition + " distance " + distance);
+    // console.log("spawn tree [" + this.trees.length + "] at " + this.lastTreePosition + " distance " + distance);
   }
 
   addWorldBorders()
@@ -266,47 +292,37 @@ export class Game extends Phaser.Scene {
       },
       this
     );
+  }
 
-
-    // bounce when hit right side off screen
-    // this.worldBorderRight = this.physics.add.staticGroup();
-
-    // var sprite = this.add.sprite(
-    //   constants.gridSize * constants.worldSize.unitWidth,
-    //   constants.gridSize * 5, 
-    // 'green');
-
-    // sprite.setScale(1, 10);
-    // this.worldBorderRight.add(sprite);
-
-    // this.physics.add.overlap(
-    //   this.player,
-    //   this.worldBorderRight,
-    //   this.playerHitWorldBorderRight,
-    //   () => {
-    //     return true;
-    //   },
-    //   this
-    // );
+  addUIText()
+  {
+    this.scoreText = this.add.bitmapText(
+      constants.gridSize / 2,
+      // constants.gridSize / 2,
+      (constants.gridSize * (constants.worldSize.unitHeight - 1)) - constants.gridSize / 2,
+      "arcade",
+      "debug",
+      40
+    ).setScrollFactor(0).setDepth(100); 
   }
 
   addDebugText()
   {
-    this.debugText = this.add.bitmapText(
-      0,
-      10,
-      "arcade",
-      "debug",
-      20
-    ).setScrollFactor(0).setDepth(100);
+    // this.debugText = this.add.bitmapText(
+    //   0,
+    //   10,
+    //   "arcade",
+    //   "debug",
+    //   20
+    // ).setScrollFactor(0).setDepth(100);
 
-    this.debugText2 = this.add.bitmapText(
-      0,
-      30,
-      "arcade",
-      "debug 2",
-      20
-    ).setScrollFactor(0).setDepth(100);
+    // this.debugText2 = this.add.bitmapText(
+    //   0,
+    //   30,
+    //   "arcade",
+    //   "debug 2",
+    //   20
+    // ).setScrollFactor(0).setDepth(100);
 
     this.playerStateText = this.add.bitmapText(
       20,
@@ -323,7 +339,8 @@ export class Game extends Phaser.Scene {
       // hole.setAlpha(1);
       // player.setAlpha(0);
       // this.cameras.main.shake(30);
-      player.turn();
+      if(player.body.velocity.x < 0)
+        player.turn();
       // player.die();
       // this.restartScene();
     }
@@ -361,50 +378,5 @@ export class Game extends Phaser.Scene {
                     )
                     .setScale(scaleX, scaleY);
     this.branches.add(branch);
-  }
-
-  collectStars(player, star)
-  {
-    // star.disableBody(true, true);
-
-    // this.score += 10;
-    // this.scoreText.setText('Score: ' + this.score);
-
-    // if(this.stars.countActive(true) % 2 === 0)
-    // {
-    //     this.releaseBomb();
-    // }
-
-    // if(this.stars.countActive(true) === 0)
-    // {
-    //     this.stars.children.iterate(function(child)
-    //     {
-    //         child.enableBody(true, child.x, 0, true, true);
-    //     });
-    // }
-  }
-
-  releaseBomb()
-  {
-    // var x = (this.player.x < 400 ) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
-
-    // var bomb = this.bombs.create(x, 17, 'bomb');
-    // bomb.setBounce(1);
-    // bomb.setCollideWorldBounds(true);
-    // bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
-  }
-
-  hitBomb(player, bomb)
-  {
-    // this.physics.pause();
-
-    // player.setTint(0xff0000);
-
-    // player.anims.play('turn');
-
-    // this.time.delayedCall(2000, () => 
-    // {
-    //     this.scene.start('GameOver');
-    // });
   }
 }
