@@ -1,5 +1,6 @@
 import { Player } from '../gameobjects/player.js';
 import { Tree } from '../gameobjects/tree.js';
+import { WorldGrid } from '../gameobjects/worldgrid.js';
 
 export class Game extends Phaser.Scene {
   constructor() {
@@ -10,6 +11,9 @@ export class Game extends Phaser.Scene {
   create() {    
     console.log("World size: ", constants.worldSize);
     // console.log(Math);
+
+    this.cameras.main.setBounds(0, 0, 20920 * 2, 20080 * 2);
+    this.physics.world.setBounds(0, 0, 20920 * 2, 20080 * 2);
 
     this.player = new Player(
       this, 
@@ -35,13 +39,16 @@ export class Game extends Phaser.Scene {
     // TODO: Die when touch ground
     this.platforms = this.physics.add.staticGroup();
 
-    var sprite = this.add.sprite(
-      constants.worldSize.width / 2, 
-      constants.gridSize * 11, 
-      'green'
-    );
-    sprite.setScale(16, 2);
-    this.platforms.add(sprite);
+    for(var i = 0; i < 10; i++)
+    {
+      var sprite = this.add.sprite(
+        constants.worldSize.width / 2 + (constants.worldSize.width * i), 
+        constants.gridSize * 11, 
+        'green'
+      );
+      sprite.setScale(16, 2);
+      this.platforms.add(sprite);
+    }
 
     this.physics.add.collider(this.player, this.platforms);
 
@@ -63,20 +70,16 @@ export class Game extends Phaser.Scene {
 
     this.addWorldBorders();
 
-    var grid = this.add.sprite(
-      constants.worldSize.width / 2, 
-      constants.worldSize.height / 2, 
-      'grid'
-    );
-    grid.setAlpha(0.5);
+    this.worldGrid = new WorldGrid(this, 0, 0, 10, 0.25);
 
     this.addDebugText();
 
     this.graphics = this.add.graphics();
     this.graphics.lineStyle(1, 0xffffff, 1); // for debug
 
-  // this.cameras.main.startFollow(this.player, true, 0.05, 0.05, 0, 240);
     this.normalisedAimDistance = 0;
+
+    this.cameras.main.startFollow(this.player, true, 0.05, 0.05, -200, 240);
   }
 
   addWorldBorders()
@@ -101,25 +104,25 @@ export class Game extends Phaser.Scene {
 
 
     // bounce when hit right side off screen
-    this.worldBorderRight = this.physics.add.staticGroup();
+    // this.worldBorderRight = this.physics.add.staticGroup();
 
-    var sprite = this.add.sprite(
-      constants.gridSize * constants.worldSize.unitWidth,
-      constants.gridSize * 5, 
-    'green');
+    // var sprite = this.add.sprite(
+    //   constants.gridSize * constants.worldSize.unitWidth,
+    //   constants.gridSize * 5, 
+    // 'green');
 
-    sprite.setScale(1, 10);
-    this.worldBorderRight.add(sprite);
+    // sprite.setScale(1, 10);
+    // this.worldBorderRight.add(sprite);
 
-    this.physics.add.overlap(
-      this.player,
-      this.worldBorderRight,
-      this.playerHitWorldBorderRight,
-      () => {
-        return true;
-      },
-      this
-    );
+    // this.physics.add.overlap(
+    //   this.player,
+    //   this.worldBorderRight,
+    //   this.playerHitWorldBorderRight,
+    //   () => {
+    //     return true;
+    //   },
+    //   this
+    // );
   }
 
   addDebugText()
@@ -130,7 +133,7 @@ export class Game extends Phaser.Scene {
       "arcade",
       "debug",
       20
-    );
+    ).setScrollFactor(0);
 
     this.debugText2 = this.add.bitmapText(
       0,
@@ -138,7 +141,7 @@ export class Game extends Phaser.Scene {
       "arcade",
       "debug 2",
       20
-    );
+    ).setScrollFactor(0);
 
     this.playerStateText = this.add.bitmapText(
       20,
@@ -155,8 +158,8 @@ export class Game extends Phaser.Scene {
       // hole.setAlpha(1);
       // player.setAlpha(0);
       // this.cameras.main.shake(30);
-      player.die();
-      // player.death();
+      player.turn();
+      // player.die();
       // this.restartScene();
     }
   }
@@ -197,7 +200,7 @@ export class Game extends Phaser.Scene {
 
   update() {
     // this.cameras.main.x += -0.5;
-    this.cameras.main.x = constants.worldSize.width / 3 - this.player.body.x ;
+    // this.cameras.main.x = constants.worldSize.width / 3 - this.player.body.x ;
 
     if (this.path) 
     {
@@ -342,46 +345,6 @@ export class Game extends Phaser.Scene {
 
       this.path.lineTo(point.x, point.y);
     }
-  }
-
-  // The length of the vector is square root of (x*x+y*y).
-  vec2magnitude (a, b)
-  {
-    return Math.sqrt((a * a + b * b));
-  }
-
-  vec2divide (vec2, value)
-  {
-    return { x: vec2.x / value, y: vec2.y / value };
-  }
-
-  vec2multiply(vec2, value)
-  {
-    return { x: vec2.x * value, y: vec2.y * value };
-  }
-
-  vec2add (vec2,  value)
-  {
-    return { x: vec2.x + value, y: vec2.y + value };
-  }
-
-  vec2addvec2(a, b)
-  {
-    return { x: a.x + b.x, y: a.y + b.y };
-  }
-
-  vec2normalise(a, b)
-  {
-    var sum = Math.abs(a) + Math.abs(b);
-
-    return { x: a / sum, y: b / sum };
-  }
-
-  roundToTwoDecimalPlaces(a)
-  {
-    a = a * 100;
-    var round = Math.round(a);
-    return round / 100;
   }
 
   collectStars(player, star)
