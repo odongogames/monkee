@@ -225,7 +225,7 @@ export class Game extends Phaser.Scene {
     // this.playerStateText.text = this.player.currentState;
     // this.playerStateText.text = this.player.body.blocked.down;
     // this.playerStateText.text = this.roundToTwoDecimalPlaces(this.normalisedAimDistance);
-    this.playerStateText.text = this.roundToTwoDecimalPlaces(this.player.body.x);
+    this.playerStateText.text = roundToTwoDecimalPlaces(this.player.body.x);
     this.playerStateText.setPosition(
       this.player.body.position.x - 15, 
       this.player.body.position.y - 30
@@ -263,7 +263,7 @@ export class Game extends Phaser.Scene {
               y: (this.pointer.worldY - 400) - this.aimStartPosition.y 
             };
 
-            this.aimDistance = this.vec2magnitude(this.aimHeading.x, this.aimHeading.y);
+            this.aimDistance = vec2magnitude(this.aimHeading.x, this.aimHeading.y);
 
             this.normalisedAimDistance = this.aimDistance / constants.worldSize.width;
             // console.log(this.normalisedAimDistance);
@@ -271,7 +271,7 @@ export class Game extends Phaser.Scene {
             // this.aimDirection = this.aimHeading / this.aimDistance; 
 
             // This is the normalized direction.
-            this.aimDirection = this.vec2divide(this.aimHeading, this.aimDistance);
+            this.aimDirection = vec2divide(this.aimHeading, this.aimDistance);
 
             this.throwDirection = this.aimDirection;
 
@@ -282,7 +282,7 @@ export class Game extends Phaser.Scene {
                                   " y: " + this.throwDirection.y;
 
             this.simulateTrajectory(
-              this.vec2multiply(this.throwDirection, 625 * this.normalisedAimDistance));
+              vec2multiply(this.throwDirection, 625 * this.normalisedAimDistance));
           }
           else
           {
@@ -327,8 +327,8 @@ export class Game extends Phaser.Scene {
 
     var positionCount = Math.ceil(linePoints / timeBetweenPoints) + 1;
 
-    var startVelocity = this.vec2divide(velocity, this.player.body.mass);
-    startVelocity = this.vec2multiply(startVelocity, this.normalisedAimDistance);
+    var startVelocity = vec2divide(velocity, this.player.body.mass);
+    startVelocity = vec2multiply(startVelocity, this.normalisedAimDistance);
 
     // this.path.clear();
     this.path = new Phaser.Curves.Path(this.aimStartPosition.x, this.aimStartPosition.y);
@@ -336,7 +336,7 @@ export class Game extends Phaser.Scene {
 
     for (var time = 0; time < linePoints; time += timeBetweenPoints)
     {
-      var point = this.vec2addvec2(this.aimStartPosition, this.vec2multiply(startVelocity, time));
+      var point = vec2addvec2(this.aimStartPosition, vec2multiply(startVelocity, time));
       // console.log("1 ", time, point);
 
       // // TODO: Replace 500 with gravity
