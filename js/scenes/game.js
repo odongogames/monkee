@@ -26,27 +26,27 @@ export class Game extends Phaser.Scene {
     this.physics.add.collider(this.player, this.branches);
 
     this.trees = [];
-
-    this.addTree(2.5, 10);
-    // this.addBranch(2.5, 4, 2, 0.2);
-    this.addBranch(2.5, 7, 4, 0.2);
-
-    this.addTree(9.5, 10);
-    // this.addBranch(10.5, 3, 2, 0.2);
-    this.addBranch(8.5, 5, 3, 0.2);
-    this.addBranch(10.5, 8, 3, 0.2);
-
+    this.treeStartX =  2.5;
+    this.minDistanceBetweenTrees = 6; 
+    this.maxDistanceBetweenTrees = 9;
+    this.lastTreePosition = 0;
+    this.treeSpawnDistance = (constants.worldSize.unitWidth  / 2) * constants.gridSize; 
+    for(var i = 0; i < 2; i++)
+    {
+        this.generateTree();  
+    }
+    
     // TODO: Die when touch ground
     this.platforms = this.physics.add.staticGroup();
 
-    for(var i = 0; i < 10; i++)
+    for(var i = 0; i < 20; i++)
     {
       var sprite = this.add.sprite(
         constants.worldSize.width / 2 + (constants.worldSize.width * i), 
         constants.gridSize * 11, 
         'green'
       );
-      sprite.setScale(16, 2);
+      sprite.setScale(18, 2);
       this.platforms.add(sprite);
     }
 
@@ -76,131 +76,21 @@ export class Game extends Phaser.Scene {
 
     this.graphics = this.add.graphics();
     this.graphics.lineStyle(1, 0xffffff, 1); // for debug
+    this.graphics.setDepth(90);
 
     this.normalisedAimDistance = 0;
 
-    this.cameras.main.startFollow(this.player, true, 0.05, 0.05, -200, 240);
+    this.cameras.main.startFollow(this.player, true, 0.05, 0.05, -100, 240);
   }
 
-  addWorldBorders()
-  {
-
-    // die when hit the left side off the screen
-    this.worldBorderLeft = this.physics.add.staticGroup();
-
-    var sprite = this.add.sprite(0, constants.gridSize * 5, 'red');
-    sprite.setScale(1, 10);
-    this.worldBorderLeft.add(sprite);
-
-    this.physics.add.overlap(
-      this.player,
-      this.worldBorderLeft,
-      this.playerHitWorldBorderLeft,
-      () => {
-        return true;
-      },
-      this
-    );
-
-
-    // bounce when hit right side off screen
-    // this.worldBorderRight = this.physics.add.staticGroup();
-
-    // var sprite = this.add.sprite(
-    //   constants.gridSize * constants.worldSize.unitWidth,
-    //   constants.gridSize * 5, 
-    // 'green');
-
-    // sprite.setScale(1, 10);
-    // this.worldBorderRight.add(sprite);
-
-    // this.physics.add.overlap(
-    //   this.player,
-    //   this.worldBorderRight,
-    //   this.playerHitWorldBorderRight,
-    //   () => {
-    //     return true;
-    //   },
-    //   this
-    // );
-  }
-
-  addDebugText()
-  {
-    this.debugText = this.add.bitmapText(
-      0,
-      10,
-      "arcade",
-      "debug",
-      20
-    ).setScrollFactor(0);
-
-    this.debugText2 = this.add.bitmapText(
-      0,
-      30,
-      "arcade",
-      "debug 2",
-      20
-    ).setScrollFactor(0);
-
-    this.playerStateText = this.add.bitmapText(
-      20,
-      20,
-      "arcade",
-      this.player.currentState,
-      20
-    );
-  }
-
-  playerHitWorldBorderLeft(player, border) {
-    if (!player.isDead()) {
-      // this.playAudio("holeshout");
-      // hole.setAlpha(1);
-      // player.setAlpha(0);
-      // this.cameras.main.shake(30);
-      player.turn();
-      // player.die();
-      // this.restartScene();
-    }
-  }
-
-  playerHitWorldBorderRight(player, border) {
-    if (!player.isDead()) {
-      // this.playAudio("holeshout");
-      // hole.setAlpha(1);
-      // player.setAlpha(0);
-      // this.cameras.main.shake(20);
-      player.turn();
-      // player.death();
-      // this.restartScene();
-    }
-  }
-
-  addTree(x, y)
-  {
-    var tree = new Tree(
-      this, 
-      this.player,
-      constants.gridSize * x, 
-      constants.gridSize * y
-    );
-    this.trees[this.trees.length] = tree;
-  }
-
-  addBranch(x, y, scaleX, scaleY)
-  {
-    var branch = this.add.sprite(
-                      constants.gridSize * x, 
-                      constants.gridSize * y, 
-                      'brown'
-                    )
-                    .setScale(scaleX, scaleY);
-    this.branches.add(branch);
-  }
 
   update() {
     // this.cameras.main.x += -0.5;
     // this.cameras.main.x = constants.worldSize.width / 3 - this.player.body.x ;
+    if(this.player.body.x > (this.lastTreePosition * constants.gridSize) - this.treeSpawnDistance)
+    {
+      this.generateTree();
+    }
 
     if (this.path) 
     {
@@ -345,6 +235,132 @@ export class Game extends Phaser.Scene {
 
       this.path.lineTo(point.x, point.y);
     }
+  }
+
+  generateTree()
+  {
+    var distance = this.minDistanceBetweenTrees;  
+    var allowedGap = this.maxDistanceBetweenTrees - this.minDistanceBetweenTrees;
+    var random = Math.round(Math.random() * allowedGap);
+    // distance = distance + random;
+    this.lastTreePosition = this.treeStartX + (this.trees.length * distance);
+    this.addTree(this.lastTreePosition, 10);
+    console.log("spawn tree [" + this.trees.length + "] at " + this.lastTreePosition + " distance " + distance);
+  }
+
+  addWorldBorders()
+  {
+    // die when hit the left side off the screen
+    this.worldBorderLeft = this.physics.add.staticGroup();
+
+    var sprite = this.add.sprite(constants.gridSize / 2, constants.gridSize * 5, 'red');
+    sprite.setScale(1, 10).setAlpha(0);
+    this.worldBorderLeft.add(sprite);
+
+    this.physics.add.overlap(
+      this.player,
+      this.worldBorderLeft,
+      this.playerHitWorldBorderLeft,
+      () => {
+        return true;
+      },
+      this
+    );
+
+
+    // bounce when hit right side off screen
+    // this.worldBorderRight = this.physics.add.staticGroup();
+
+    // var sprite = this.add.sprite(
+    //   constants.gridSize * constants.worldSize.unitWidth,
+    //   constants.gridSize * 5, 
+    // 'green');
+
+    // sprite.setScale(1, 10);
+    // this.worldBorderRight.add(sprite);
+
+    // this.physics.add.overlap(
+    //   this.player,
+    //   this.worldBorderRight,
+    //   this.playerHitWorldBorderRight,
+    //   () => {
+    //     return true;
+    //   },
+    //   this
+    // );
+  }
+
+  addDebugText()
+  {
+    this.debugText = this.add.bitmapText(
+      0,
+      10,
+      "arcade",
+      "debug",
+      20
+    ).setScrollFactor(0).setDepth(100);
+
+    this.debugText2 = this.add.bitmapText(
+      0,
+      30,
+      "arcade",
+      "debug 2",
+      20
+    ).setScrollFactor(0).setDepth(100);
+
+    this.playerStateText = this.add.bitmapText(
+      20,
+      20,
+      "arcade",
+      this.player.currentState,
+      20
+    ).setDepth(100);
+  }
+
+  playerHitWorldBorderLeft(player, border) {
+    if (!player.isDead()) {
+      // this.playAudio("holeshout");
+      // hole.setAlpha(1);
+      // player.setAlpha(0);
+      // this.cameras.main.shake(30);
+      player.turn();
+      // player.die();
+      // this.restartScene();
+    }
+  }
+
+  playerHitWorldBorderRight(player, border) {
+    if (!player.isDead()) {
+      // this.playAudio("holeshout");
+      // hole.setAlpha(1);
+      // player.setAlpha(0);
+      // this.cameras.main.shake(20);
+      player.turn();
+      // player.death();
+      // this.restartScene();
+    }
+  }
+
+  addTree(x, y)
+  {
+    var tree = new Tree(
+      this, 
+      this.player,
+      constants.gridSize * x, 
+      constants.gridSize * y
+    );
+    this.trees[this.trees.length] = tree;
+  }
+
+  addBranch(x, y, scaleX, scaleY)
+  {
+    var branch = this.add.sprite(
+                      constants.gridSize * x, 
+                      constants.gridSize * y, 
+                      'brown'
+                    )
+                    .setScale(scaleX, scaleY);
+    this.branches.add(branch);
   }
 
   collectStars(player, star)

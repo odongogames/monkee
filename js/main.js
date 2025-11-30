@@ -8,7 +8,7 @@ const config = {
   width: constants.worldSize.width,
   height: constants.worldSize.height,
   parent: 'container',
-  backgroundColor: '#028af8',
+  backgroundColor: '#7c7cf2',
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
@@ -18,7 +18,7 @@ const config = {
     default: "arcade",
     arcade: {
       gravity: { y: 500 },
-      debug: true,
+      debug: false,
     },
   },
   plugins: {},

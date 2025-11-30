@@ -9,8 +9,8 @@ export class Branches extends Phaser.GameObjects.Container {
     super(scene, x, y);
     this.scene.add.existing(this);
     this.scene.physics.add.existing(this);
-    this.body.immovable = true;
-    this.body.pushable = false;
+    // this.body.immovable = true;
+    // this.body.pushable = false;
     // this.body.static = true;
     this.body.setAllowGravity(false);
     console.log(this.body);

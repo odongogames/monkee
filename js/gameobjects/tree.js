@@ -5,28 +5,19 @@ export class Tree extends Phaser.GameObjects.Container {
 		this.x = x;
 		this.y = y;
 		this.scene = scene;
-		// this.width = constants.gridSize;
-		// this.height = constants.gridSize;
 
 		scene.add.existing(this);
-		// scene.physics.add.existing(this);
-		// this.body.immovable = true;
 
 		this.addTrunk();
-		// this.branches = this.scene.add.group();
-		// this.branches = [];
-		// this.addBranch(7, 7);
-		// this.addBranch(0, 0);
-
-    // this.scene.physics.add.collider(player, this.branches);
-
-		// this.add(this.branches);
-		// console.log(this.branches);
-	}
-
-	updatePosition()
-	{
-		// this.x += 0.1;
+		
+    if(Math.random(0, 1) > 0.25)
+    {
+	    this.addOneBranch();
+    }
+    else
+    {
+	    this.addTwoBranches();
+    }
 	}
 
 	addTrunk()
@@ -38,19 +29,49 @@ export class Tree extends Phaser.GameObjects.Container {
     this.add(this.trunk);
 	}
 
-	// addBranch(x, y)
-	// {
-	// 	var branch = this.scene.add.sprite(
-	// 					constants.gridSize * x, 
-	// 					constants.gridSize * y, 
-	// 					'brown'
-	// 				)
-	// 				.setScale(4, .2);
+	addOneBranch()
+	{
+		var width = 2 + Math.round(Math.random() * 2);
+		var x = Math.round(Math.random() * width) / 4;
+		if(Math.random() > 0.5)
+		{
+			x = -x;
+		}
+		var y = 5 + Math.round(Math.random() * 4);
+    this.addBranch(x, y, width, 0.2);
+	}
 
-	// 	// this.add(branch);
-	// 	// this.branches[this.branches.length] = branch;
-	// 	// console.log(this.branches);
-	//     this.scene.branches.add(branch);
-	// }
+	addTwoBranches()
+	{
+		// branch one
+		var width = 2 + Math.round(Math.random() * 2);
+		var x = Math.round(Math.random() * width) / 4;
+		if(Math.random() > 0.5)
+		{
+			x = -x;
+		}
+		var y = 3 + Math.round(Math.random() * 3);
+    this.addBranch(x, y, width, 0.2);
 
+    // branch two
+    width = 2 + Math.round(Math.random() * 2);
+		x = Math.round(Math.random() * width) / 4;
+		if(Math.random() > 0.5)
+		{
+			x = -x;
+		}
+		y = 7 + Math.round(Math.random() * 3);
+    this.addBranch(x, y, width, 0.2);	
+	}
+
+  addBranch(x, y, scaleX, scaleY)
+  {
+    var branch = this.scene.add.sprite(
+                      constants.gridSize * x + this.x, 
+                      constants.gridSize * y, 
+                      'brown'
+                    )
+                    .setScale(scaleX, scaleY);
+    this.scene.branches.add(branch);
+  }
 }
