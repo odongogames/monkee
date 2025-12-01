@@ -2,13 +2,14 @@
 import { Boot } from './scenes/boot.js';
 import { Game } from './scenes/game.js';
 import { GameOver } from './scenes/gameOver.js';
+import { MainMenu } from './scenes/mainMenu.js';
 import { Preloader } from './scenes/preloader.js';
 
 const config = {
   width: constants.worldSize.width,
   height: constants.worldSize.height,
   parent: 'container',
-  backgroundColor: '#7c7cf2',
+  backgroundColor: constants.colors.blue,
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
@@ -24,9 +25,10 @@ const config = {
   plugins: {},
   scene: [
     Boot,
+    MainMenu,
     Preloader,
     Game,
-    GameOver
+    GameOver,
   ]
 };
 

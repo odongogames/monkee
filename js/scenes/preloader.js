@@ -47,11 +47,17 @@ export class Preloader extends Phaser.Scene {
         this.load.image('darkbrown', 'darkbrown.png');
         this.load.image('green', 'green.png');
         this.load.image('grid', 'grid.png');
+        this.load.image('indicator', 'indicator.png');
         this.load.image('monkey', 'monkee.png');
+        this.load.image('pixel', 'pixel.png');
         this.load.image('red', 'red.png');
         this.load.image('reticle', 'reticle.png');
         this.load.image('treetop-4', 'treetop-4.png');
         this.load.image('treetop-5', 'treetop-5.png');
+
+        this.load.setPath('assets/screens');
+
+        this.load.image('main_menu', 'Monkee_main_menu.png');
     }
 
     loadFonts() {
@@ -69,6 +75,6 @@ export class Preloader extends Phaser.Scene {
         //  For example, you can define global animations here, so we can use them in other scenes.
 
         //  Move to the MainMenu. You could also swap this for a Scene Transition, such as a camera fade.
-        this.scene.start('Game');
+        this.scene.start('MainMenu');
     }
 }

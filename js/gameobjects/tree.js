@@ -1,5 +1,3 @@
-import { Banana } from './banana.js';
-
 export class Tree extends Phaser.GameObjects.Container {
 	constructor(scene, player, x, y) {
 		super(scene, x, y);

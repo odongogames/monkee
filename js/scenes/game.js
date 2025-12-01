@@ -6,19 +6,22 @@ export class Game extends Phaser.Scene {
   constructor() {
       super('Game');
 
+      this.drawPath = false;
+      this.score = 0;
   }
 
   create() {    
-    console.log("World size: ", constants.worldSize);
+    // console.log("World size: ", constants.worldSize);
     // console.log(Math);
 
-    console.log(this.cameras.main);
+    // console.log(this.cameras.main);
     // this.cameras.main.scaleManager.scaleMode = 1;
+
+    // this.cameras.main.zoomX = 0.5;
+    // this.cameras.main.zoomY = 0.5;
 
     this.cameras.main.setBounds(0, 0, 20920 * 2, 20080 * 2);
     this.physics.world.setBounds(0, 0, 20920 * 2, 20080 * 2);
-
-    this.score = 0;
 
     this.player = new Player(
       this, 
@@ -67,6 +70,13 @@ export class Game extends Phaser.Scene {
 
     this.cursors = this.input.keyboard.createCursorKeys();
 
+    this.A = this.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.A
+    );
+    this.D = this.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.D
+    );
+
     // aiming
     this.reticle = this.add.sprite(
       constants.gridSize * constants.worldSize.unitWidth / 2, 
@@ -75,14 +85,33 @@ export class Game extends Phaser.Scene {
     );
     this.reticle.setDepth(this.player.depth + 1);
     this.aimStartPosition = { x: 0, y: 0 };
-    // this.reticle.visible = false;
+
+    // aim helper
+    this.aimLine = [];
+    for(var i = 0; i < 7; i++)
+    {
+      var sprite = this.add.sprite( 0, 0, 'pixel').setDepth(100);
+      this.aimLine[this.aimLine.length] = sprite;
+    }
+    this.reticle.visible = false;
 
     this.addWorldBorders();
 
     // this.worldGrid = new WorldGrid(this, 0, 0, 10, 0.25);
 
+    // banana icons
+    this.bananaIcons = [];
+    for(var i = 0; i < 16; i++)
+    {
+      var x = constants.gridSize + constants.gridSize * i;
+      var y = (constants.worldSize.unitHeight * constants.gridSize) - constants.gridSize;
+      var sprite = this.add.sprite(x, y, 'banana').setDepth(100).setScrollFactor(0);
+      sprite.visible = false;
+      this.bananaIcons[this.bananaIcons.length] = sprite;
+    }
+
     // this.addDebugText();
-    this.addUIText();
+    // this.addUIText();
 
     this.graphics = this.add.graphics();
     this.graphics.lineStyle(1, 0xffffff, 1); // for debug
@@ -100,7 +129,12 @@ export class Game extends Phaser.Scene {
     // banana.disableBody(true, true);
 
     this.score++;
-    this.scoreText.setText(this.score);
+
+    if(this.score - 1 < this.bananaIcons.length)
+    {
+      this.bananaIcons[this.score - 1].visible = true;
+    }
+    // this.scoreText.setText(this.score);
     // console.log("Collect banana [" + this.score + "]");
   }
 
@@ -118,24 +152,20 @@ export class Game extends Phaser.Scene {
       this.player.body.velocity.y = -this.player.body.velocity.y;
     }
 
-    if (this.path) 
+    if (this.path && this.drawPath) 
     {
       this.graphics.clear();
       this.path.draw(this.graphics);
     }
 
-    if(this.cursors.left.isDown) {
+    if(this.cursors.left.isDown || this.A.isDown) {
         this.player.moveLeft();
     }
-    else if (this.cursors.right.isDown) {
+    else if (this.cursors.right.isDown || this.D.isDown) {
         this.player.moveRight();
     }
     else {
         this.player.idle();
-    }
-
-    if (this.cursors.up.isDown) {
-        this.player.jump();
     }
 
     // this.playerStateText.text = this.player.currentState;
@@ -159,6 +189,12 @@ export class Game extends Phaser.Scene {
           this.reticle.x = this.aimStartPosition.x;
           this.reticle.y = this.aimStartPosition.y;
 
+          this.reticle.visible = true;
+          // for(var i = 0; i < this.aimLine.length; i++)
+          // {
+          //   this.aimLine[i].visible = true;
+          // }
+
           // console.log(this.aimStartPosition.x, this.aimStartPosition.y);
 
           this.player.currentState = this.player.states.aiming;
@@ -166,80 +202,89 @@ export class Game extends Phaser.Scene {
         break;
 
       case this.player.states.aiming:
-          if(this.pointer.isDown)
+        if(this.pointer.isDown)
+        {
+          this.aimStartPosition.x = this.player.body.x + this.player.body.width / 2;
+          this.aimStartPosition.y = this.player.body.y + this.player.body.height / 2;
+
+          this.reticle.x = this.aimStartPosition.x;
+          this.reticle.y = this.aimStartPosition.y;
+
+          this.aimHeading = {
+            x: this.pointer.worldX - this.aimStartPosition.x,
+            y: (this.pointer.worldY - 400) - this.aimStartPosition.y 
+          };
+
+          this.aimDistance = vec2magnitude(this.aimHeading.x, this.aimHeading.y);
+
+          this.normalisedAimDistance = this.aimDistance / constants.worldSize.width;
+          // console.log(this.normalisedAimDistance);
+
+          // this.aimDirection = this.aimHeading / this.aimDistance; 
+
+          // This is the normalized direction.
+          this.aimDirection = vec2divide(this.aimHeading, this.aimDistance);
+
+          this.throwDirection = this.aimDirection;
+
+          // this.debugText.text = "x: " + Math.floor(this.aimHeading.x) + 
+          //                       " y: " + Math.floor(this.aimHeading.y);
+
+          // this.debugText2.text = "x: " + this.throwDirection.x + 
+          //                       " y: " + this.throwDirection.y;
+
+          this.simulateTrajectory(
+            vec2multiply(this.throwDirection, 625 * this.normalisedAimDistance));
+        }
+        else
+        {
+          if(this.aimHeading.x == 0 && this.aimHeading.y == 0)
           {
-            this.aimStartPosition.x = this.player.body.x + this.player.body.width / 2;
-            this.aimStartPosition.y = this.player.body.y + this.player.body.height / 2;
-
-            this.reticle.x = this.aimStartPosition.x;
-            this.reticle.y = this.aimStartPosition.y;
-
-            this.aimHeading = {
-              x: this.pointer.worldX - this.aimStartPosition.x,
-              y: (this.pointer.worldY - 400) - this.aimStartPosition.y 
-            };
-
-            this.aimDistance = vec2magnitude(this.aimHeading.x, this.aimHeading.y);
-
-            this.normalisedAimDistance = this.aimDistance / constants.worldSize.width;
-            // console.log(this.normalisedAimDistance);
-
-            // this.aimDirection = this.aimHeading / this.aimDistance; 
-
-            // This is the normalized direction.
-            this.aimDirection = vec2divide(this.aimHeading, this.aimDistance);
-
-            this.throwDirection = this.aimDirection;
-
-            // this.debugText.text = "x: " + Math.floor(this.aimHeading.x) + 
-            //                       " y: " + Math.floor(this.aimHeading.y);
-
-            // this.debugText2.text = "x: " + this.throwDirection.x + 
-            //                       " y: " + this.throwDirection.y;
-
-            this.simulateTrajectory(
-              vec2multiply(this.throwDirection, 625 * this.normalisedAimDistance));
-          }
-          else
-          {
-            if(this.aimHeading.x == 0 && this.aimHeading.y == 0)
-            {
-              console.log("Cannot jump. throwDirection is zero");
-              this.player.currentState = this.player.states.readyToJump;
-              return;
-            }
-            this.player.jump(
-              this.throwDirection.x * 1 * this.normalisedAimDistance, 
-              this.throwDirection.y * -1 * this.normalisedAimDistance
-            );
-            this.player.currentState = this.player.states.jumping;
-            // console.log("Pointer up");
-          }
-        break;
-
-        case this.player.states.jumping:
-          // console.log(this.player.body.velocity.y);
-
-          if(this.player.body.blocked.down)
-          {
-            if(this.player.body.velocity.y < 0)
-            {
-              console.log("Player is moving up. Cannot land");
-              return;
-            }
-
-            // console.log("Player has landed");
+            console.log("Cannot jump. throwDirection is zero");
             this.player.currentState = this.player.states.readyToJump;
+            return;
           }
-          break;
+
+          this.reticle.visible = false;
+          for(var i = 0; i < this.aimLine.length; i++)
+          {
+            // this.aimLine[i].visible = false;
+            this.aimLine[i].y = -100;
+          }
+
+          this.player.jump(
+            this.throwDirection.x * 1 * this.normalisedAimDistance, 
+            this.throwDirection.y * -1 * this.normalisedAimDistance
+          );
+          this.player.currentState = this.player.states.jumping;
+          // console.log("Pointer up");
+        }
+      break;
+
+      case this.player.states.jumping:
+        // console.log(this.player.body.velocity.y);
+
+        if(this.player.body.blocked.down)
+        {
+          if(this.player.body.velocity.y < 0)
+          {
+            console.log("Player is moving up. Cannot land");
+            return;
+          }
+
+          // console.log("Player has landed");
+          this.player.currentState = this.player.states.readyToJump;
+        }
+        break;
     }
   }
 
   simulateTrajectory(velocity)
   {
     // _lineRenderer.enabled = _registrySO.isDebugMode && _useLineRenderer;
-    var linePoints = 10;
-    var timeBetweenPoints = 0.1;
+    var linePoints = 2;
+    var timeBetweenPoints = 0.01;
+    var counter = 0;
 
     var positionCount = Math.ceil(linePoints / timeBetweenPoints) + 1;
 
@@ -249,7 +294,10 @@ export class Game extends Phaser.Scene {
     // this.path.clear();
     this.path = new Phaser.Curves.Path(this.aimStartPosition.x, this.aimStartPosition.y);
       // _lineRenderer.SetPosition(i, startPosition);
-
+    
+    var nextAimPoint = .05;
+    var aimInterval = .05;
+    var aimIndex = 0;
     for (var time = 0; time < linePoints; time += timeBetweenPoints)
     {
       var point = vec2addvec2(this.aimStartPosition, vec2multiply(startVelocity, time));
@@ -259,8 +307,18 @@ export class Game extends Phaser.Scene {
       point.y = this.aimStartPosition.y + startVelocity.y * 
                 time + (625 / 2 * time * time);
 
+      if(time >= nextAimPoint && aimIndex < this.aimLine.length)
+      {
+        this.aimLine[aimIndex].x = point.x;
+        this.aimLine[aimIndex].y = point.y;
+        nextAimPoint = nextAimPoint + aimInterval;
+        aimIndex ++;
+      }
+
       this.path.lineTo(point.x, point.y);
+      counter ++;
     }
+    // console.log(counter);
   }
 
   generateTree()
