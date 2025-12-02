@@ -1,124 +1,125 @@
 export class Player extends Phaser.Physics.Arcade.Sprite
 {
-    constructor(scene, x, y)
-    {
-        super(scene, x, y, 'monkey');
+  constructor(scene, x, y)
+  {
+    super(scene, x, y, 'monkey');
 
-        this.setDepth(1);
-        scene.add.existing(this);
-        scene.physics.add.existing(this);
-        this.setBounce(0);
-        // this.setCollideWorldBounds(true);
-        // this.initAnimations();
-
-
-        // states  
-        this.states = {
-            idle:           0,
-            readyToJump:    1,
-            aiming:         2,
-            jumping:        3,
-            dead:           100
-        }
-
-        this.currentState = this.states.idle;
+    this.setDepth(1);
+    scene.add.existing(this);
+    scene.physics.add.existing(this);
+    this.setBounce(0);
+    // this.setCollideWorldBounds(true);
+    // this.initAnimations();
 
 
+    // states  
+    this.states = {
+        idle:           0,
+        readyToJump:    1,
+        aiming:         2,
+        jumping:        3,
+        dead:           100
     }
 
+    this.currentState = this.states.readyToJump;
 
-    // initAnimations()
-    // {
-    //     this.anims.create({
-    //         key: 'left',
-    //         frames: this.anims.generateFrameNumbers('dude', {start: 0, end: 3}),
-    //         frameRate: 10,
-    //         repeat: -1
-    //     });
+    this.cursors = scene.input.keyboard.createCursorKeys();
 
-    //     this.anims.create({
-    //         key: 'turn',
-    //         frames: [ { key: 'dude', frame: 4 } ],
-    //         frameRate: 1
-    //     });
+    this.A = scene.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.A
+    );
+    this.D = scene.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.D
+    );
+  }
 
-    //     this.anims.create({
-    //         key: 'right',
-    //         frames: this.anims.generateFrameNumbers('dude', {start: 5, end: 8}),
-    //         frameRate: 10,
-    //         repeat: -1
-    //     });
-    // }
-
-    isDead()
+  update()
+  {
+    if(this.body.y < 0 && this.body.velocity.y < 0)
     {
-        return this.currentState == this.states.dead;
+      this.body.velocity.y = -this.body.velocity.y;
     }
 
-    moveLeft()
-    {
-        if(this.dead) return;
-
-        if(this.body.blocked.down)
-            this.setVelocityX(-200);
-
-        // this.anims.play('left', true);
+    if(this.cursors.left.isDown || this.A.isDown) {
+        this.moveLeft();
     }
-
-    moveRight()
-    {
-        if(this.dead) return;
-
-        if(this.body.blocked.down)
-            this.setVelocityX(200);
-
-
-        // this.anims.play('right', true);
+    else if (this.cursors.right.isDown || this.D.isDown) {
+        this.moveRight();
     }
-
-    idle()
-    {
-        if(this.body.blocked.down)
-            this.setVelocityX(0);
-
-        // this.anims.play('turn');
+    else {
+        this.idle();
     }
+  }
 
-    jump()
-    {
-        if(this.dead) return;
+  isDead()
+  {
+    return this.currentState == this.states.dead;
+  }
 
-        if(this.body.blocked.down)
-        {
-            this.setVelocityY(-500);
-        }
-    }
+  moveLeft()
+  {
+    if(this.isDead()) return;
 
-    jump(x, y)
-    {
-        if(this.dead) return;
+    if(this.body.blocked.down)
+        this.setVelocityX(-200);
 
-        if(this.body.blocked.down)
-        {
-            this.setVelocityX(500 * x);
-            this.setVelocityY(-500 * y);
-        }
-    }
+    // this.anims.play('left', true);
+  }
 
-    turn()
-    {
-        if(this.dead) return;
+  moveRight()
+  {
+    if(this.isDead()) return;
 
-        this.setVelocityX(-this.body.velocity.x);
-        // console.log("turn monkey");
-    }
+    if(this.body.blocked.down)
+        this.setVelocityX(200);
 
-    die()
-    {
-        this.currentState = this.states.dead;
-        this.body.setAllowGravity(false);
+
+    // this.anims.play('right', true);
+  }
+
+  idle()
+  {
+    if(this.body.blocked.down)
         this.setVelocityX(0);
-        this.setVelocityY(0);
-        console.log("dead monkey");
+
+    // this.anims.play('turn');
+  }
+
+  jump()
+  {
+    if(this.isDead()) return;
+
+    if(this.body.blocked.down)
+    {
+        this.setVelocityY(-500);
     }
+  }
+
+  jump(x, y)
+  {
+    if(this.isDead()) return;
+
+    if(this.body.blocked.down)
+    {
+        this.setVelocityX(500 * x);
+        this.setVelocityY(-500 * y);
+    }
+  }
+
+  turn()
+  {
+    if(this.isDead()) return;
+
+    this.setVelocityX(-this.body.velocity.x);
+    // console.log("turn monkey");
+  }
+
+  die()
+  {
+    this.currentState = this.states.dead;
+    this.body.setAllowGravity(false);
+    this.setVelocityX(0);
+    this.setVelocityY(0);
+    console.log("dead monkey");
+  }
 }

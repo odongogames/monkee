@@ -1,4 +1,5 @@
 import { Player } from '../gameobjects/player.js';
+import { PracticeUI } from '../gameobjects/practiceUI.js';
 import { Tree } from '../gameobjects/tree.js';
 import { WorldGrid } from '../gameobjects/worldgrid.js';
 
@@ -7,10 +8,15 @@ export class Game extends Phaser.Scene {
       super('Game');
 
       this.drawPath = false;
-      this.score = 0;
   }
 
   create() {    
+    // console.log("Game mode: [" + this.registry.get(constants.variableNames.gameMode) + "]");
+
+    this.hasBanana = false;
+    this.timeLeft = constants.variables.totalPlayTime;
+    this.lastPracticeTreeIndex = 1;
+    this.registry.set(constants.variableNames.score, 0);
     // console.log("World size: ", constants.worldSize);
     // console.log(Math);
 
@@ -28,25 +34,79 @@ export class Game extends Phaser.Scene {
       constants.gridSize * 2.5, 
       50
     ); 
-    this.player.currentState = this.player.states.readyToJump;
+    this.lastValidPlayerPosition = { x: 0, y: 0 };
+    this.lastValidPlayerPosition.x = this.player.body.position.x;
+    this.lastValidPlayerPosition.y = this.player.body.position.y;
 
     this.branches = this.physics.add.staticGroup();
     this.physics.add.collider(this.player, this.branches);
 
     this.bananas = this.physics.add.staticGroup();
-    // this.bananas.setAllowGravity(false);
     this.physics.add.overlap(this.player, this.bananas, this.collectBanana, null, this);
 
     this.trees = [];
-    this.treeStartX =  2.5;
-    this.minDistanceBetweenTrees = 6; 
     this.maxDistanceBetweenTrees = 9;
     this.lastTreePosition = 0;
     this.treeSpawnDistance = (constants.worldSize.unitWidth  / 2) * constants.gridSize; 
+
+    switch(this.registry.get(constants.variableNames.gameMode))
+    {
+      case constants.gameMode.normal:
+        this.minDistanceBetweenTrees = 6; 
+        this.treeStartX =  2.5;
+        this.isPracticeMode = false;
+        this.timeLeftText =  this.add
+          .bitmapText(constants.worldSize.width - 60, 485, "arcade", constants.variables.totalPlayTime, constants.textSizes.large)
+          .setOrigin(0.5, 1)
+          .setDepth(100)
+          .setScrollFactor(0)
+          .setTint(constants.colors.darkbrown);
+        this.spikes = this.physics.add.staticGroup();
+        this.spikeSpawnDistance = ((constants.worldSize.unitWidth  / 2) + 2) * constants.gridSize; 
+        this.physics.add.overlap(this.player, this.spikes, this.touchSpike, null, this);
+        for(var i = 0; i < 20; i++)
+        {
+          this.generateSpike();  
+        }
+        break;
+      case constants.gameMode.practice:
+        this.minDistanceBetweenTrees = 8; 
+        this.treeStartX = 4;
+        this.isPracticeMode = true;
+
+        this.practiceUI = new PracticeUI(
+          this,
+          constants.worldSize.width / 2,
+          constants.worldSize.height / 2
+        );
+        break;
+    }
+
     for(var i = 0; i < 2; i++)
     {
-        this.generateTree();  
+      var spawnBanana = i == 0 ? false : true;
+
+      this.generateTree(spawnBanana);  
     }
+
+    if(!this.hasBanana)
+    {
+      // console.log("This scene has no banana. Adding one...");
+      var tree = this.trees[this.lastPracticeTreeIndex];
+
+      if(tree.branches.length == 1)
+      {
+        tree.addBanana(tree.branches[0]);
+      }
+      else if(tree.branches.length == 2)
+      {
+        var index = Math.random() > 0.5 ? 0 : 1;
+
+        tree.addBanana(tree.branches[index]);
+      }
+      this.hasBanana = true;
+    }
+
     
     // TODO: Die when touch ground
     this.platforms = this.physics.add.staticGroup();
@@ -66,16 +126,9 @@ export class Game extends Phaser.Scene {
 
     // input
     this.pointer = this.input.activePointer;
+    // console.log(this.pointer);
+
     this.input.mouse.disableContextMenu();
-
-    this.cursors = this.input.keyboard.createCursorKeys();
-
-    this.A = this.input.keyboard.addKey(
-      Phaser.Input.Keyboard.KeyCodes.A
-    );
-    this.D = this.input.keyboard.addKey(
-      Phaser.Input.Keyboard.KeyCodes.D
-    );
 
     // aiming
     this.reticle = this.add.sprite(
@@ -85,6 +138,7 @@ export class Game extends Phaser.Scene {
     );
     this.reticle.setDepth(this.player.depth + 1);
     this.aimStartPosition = { x: 0, y: 0 };
+    this.pointerStartPosition = { x: 0, y: 0 };
 
     // aim helper
     this.aimLine = [];
@@ -101,7 +155,7 @@ export class Game extends Phaser.Scene {
 
     // banana icons
     this.bananaIcons = [];
-    for(var i = 0; i < 16; i++)
+    for(var i = 0; i < 15; i++)
     {
       var x = constants.gridSize + constants.gridSize * i;
       var y = (constants.worldSize.unitHeight * constants.gridSize) - constants.gridSize;
@@ -119,53 +173,119 @@ export class Game extends Phaser.Scene {
 
     this.normalisedAimDistance = 0;
 
-    this.cameras.main.startFollow(this.player, true, 0.05, 0.05, -100, 240);
+    if(!this.isPracticeMode)
+    {
+      this.cameras.main.startFollow(this.player, true, 0.05, 0.05, -100, 240);
+    }
   }
 
   collectBanana(player, banana)
   {
     // player.disableBody(true, true);
-    banana.destroy();
     // banana.disableBody(true, true);
 
-    this.score++;
+    banana.destroy();
 
-    if(this.score - 1 < this.bananaIcons.length)
+    if(this.isPracticeMode)
     {
-      this.bananaIcons[this.score - 1].visible = true;
+      // respawn banana
+      var index = this.lastPracticeTreeIndex == 1 ? 0 : 1;
+      var tree = this.trees[index];
+      this.lastPracticeTreeIndex = index;
+
+      if(tree.branches.length == 1)
+      {
+        tree.addBanana(tree.branches[0]);
+      }
+      else if(tree.branches.length == 2)
+      {
+        var index = Math.random() > 0.5 ? 0 : 1;
+
+        tree.addBanana(tree.branches[index]);
+      }
     }
-    // this.scoreText.setText(this.score);
-    // console.log("Collect banana [" + this.score + "]");
+    else
+    {
+      this.registry.set(
+        constants.variableNames.score, 
+        this.registry.get(constants.variableNames.score) + 1
+      );
+
+      if(this.registry.get(constants.variableNames.score) >= this.bananaIcons.length)
+      {
+        this.scene.start("WinScreen");
+      }
+      else
+      {
+        this.bananaIcons[this.registry.get(constants.variableNames.score) - 1].visible = true;
+      }
+    }
   }
 
+  touchSpike()
+  {
+    // this.player.body.position = this.lastValidPlayerPosition;
 
-  update() {
+    var closestDistance = 10000000;
+    var closestIndex = -1;
+    for(var i = 0; i < this.trees.length; i++)
+    {
+      var treePosition = { x: this.trees[i].x, y: this.trees[i].y };
+      var subtract = vec2subtractvec2(this.lastValidPlayerPosition, treePosition)
+      // console.log("Subtract: ", subtract.x, subtract.y);
+      var distance = vec2magnitude(subtract);
+      // console.log("Distance: " + distance);
+
+      if(distance < closestDistance)
+      {
+        closestDistance = distance;
+        closestIndex = i;
+      }
+    }
+
+    // console.log("Closest index: [" + closestIndex + "]");
+    this.lastValidPlayerPosition.x = this.trees[closestIndex].x;
+
+    // console.log("Playe touch spike", this.player.body.position, this.lastValidPlayerPosition);
+
+    this.player.body.x = this.lastValidPlayerPosition.x;
+    this.player.body.y = this.lastValidPlayerPosition.y - 10;
+  }
+
+  update(timestep, delta) {
     // this.cameras.main.x += -0.5;
     // this.cameras.main.x = constants.worldSize.width / 3 - this.player.body.x ;
-    if(this.player.body.x > (this.lastTreePosition * constants.gridSize) - this.treeSpawnDistance)
+    if(!this.isPracticeMode)
     {
-      this.generateTree();
+      this.timeLeft -= delta / 1000;
+      this.timeLeftText.text = Math.floor(this.timeLeft);
+
+      if(this.timeLeft <= 0)
+      {
+        this.scene.start('GameOver');
+      }
+
+      if(this.player.body.x > this.lastTreePosition - this.treeSpawnDistance)
+      {
+        this.generateTree(true);
+      }
+
+      if(this.player.body.x > this.lastSpikePosition - this.spikeSpawnDistance)
+      {
+        this.generateSpike();
+      }
+
+      // this.debugText.text = this.lastSpikePosition;
+      // this.debugText2.text = this.player.body.position.x;
     }
 
-    if(this.player.body.y < 0 && this.player.body.velocity.y < 0)
-    {
-      this.player.body.velocity.y = -this.player.body.velocity.y;
-    }
+
+    this.player.update();
 
     if (this.path && this.drawPath) 
     {
       this.graphics.clear();
       this.path.draw(this.graphics);
-    }
-
-    if(this.cursors.left.isDown || this.A.isDown) {
-        this.player.moveLeft();
-    }
-    else if (this.cursors.right.isDown || this.D.isDown) {
-        this.player.moveRight();
-    }
-    else {
-        this.player.idle();
     }
 
     // this.playerStateText.text = this.player.currentState;
@@ -177,17 +297,38 @@ export class Game extends Phaser.Scene {
     //   this.player.body.position.y - 30
     // );
 
+    if(!this.player.isDead() && this.player.body.blocked.down)
+    {
+      // this.lastValidPlayerPosition = this.player.body.position;
+      this.lastValidPlayerPosition.x = this.player.body.position.x;
+      this.lastValidPlayerPosition.y = this.player.body.position.y;
+    }
+
+    // this.debugText.text = "x: " + this.player.body.position.x + 
+    //                       " y: " + this.player.body.position.y;
+
+    // this.debugText2.text = "x: " + this.lastValidPlayerPosition.x + 
+    //                       " y: " + this.lastValidPlayerPosition.y;
+
     switch(this.player.currentState)
     {
       case this.player.states.readyToJump:
         if(this.pointer.isDown)
         {
-          // this.reticle.visible = true;
-          this.aimStartPosition.x = this.player.body.x + this.player.body.width / 2;
-          this.aimStartPosition.y = this.player.body.y + this.player.body.height / 2;
+          if(this.isPracticeMode && this.pointer.y > 410)
+          {
+            return;
+          }
 
-          this.reticle.x = this.aimStartPosition.x;
-          this.reticle.y = this.aimStartPosition.y;
+          // this.reticle.visible = true;
+          this.reticle.x = this.player.body.x + this.player.body.width / 2;
+          this.reticle.y = this.player.body.y + this.player.body.height / 2;
+
+          this.aimStartPosition.x = this.reticle.x;
+          this.aimStartPosition.y = this.reticle.y;
+
+          this.pointerStartPosition.x = this.pointer.worldX;
+          this.pointerStartPosition.y = this.pointer.worldY;
 
           this.reticle.visible = true;
           // for(var i = 0; i < this.aimLine.length; i++)
@@ -204,18 +345,18 @@ export class Game extends Phaser.Scene {
       case this.player.states.aiming:
         if(this.pointer.isDown)
         {
-          this.aimStartPosition.x = this.player.body.x + this.player.body.width / 2;
-          this.aimStartPosition.y = this.player.body.y + this.player.body.height / 2;
+          this.reticle.x = this.player.body.x + this.player.body.width / 2;
+          this.reticle.y = this.player.body.y + this.player.body.height / 2;
 
-          this.reticle.x = this.aimStartPosition.x;
-          this.reticle.y = this.aimStartPosition.y;
+          this.aimStartPosition.x = this.reticle.x;
+          this.aimStartPosition.y = this.reticle.y;          
 
           this.aimHeading = {
-            x: this.pointer.worldX - this.aimStartPosition.x,
-            y: (this.pointer.worldY - 400) - this.aimStartPosition.y 
+            x: this.pointer.worldX - this.pointerStartPosition.x,
+            y: (this.pointer.worldY - 350) - this.pointerStartPosition.y 
           };
 
-          this.aimDistance = vec2magnitude(this.aimHeading.x, this.aimHeading.y);
+          this.aimDistance = vec2magnitude(this.aimHeading);
 
           this.normalisedAimDistance = this.aimDistance / constants.worldSize.width;
           // console.log(this.normalisedAimDistance);
@@ -268,7 +409,7 @@ export class Game extends Phaser.Scene {
         {
           if(this.player.body.velocity.y < 0)
           {
-            console.log("Player is moving up. Cannot land");
+            // console.log("Player is moving up. Cannot land");
             return;
           }
 
@@ -321,15 +462,53 @@ export class Game extends Phaser.Scene {
     // console.log(counter);
   }
 
-  generateTree()
+  generateSpike()
+  {
+    var distance = constants.gridSize * 0.8;  
+    var spikeStartX = distance / 2;
+    this.lastSpikePosition = spikeStartX + (this.spikes.children.entries.length * distance);
+    this.addSpike(this.lastSpikePosition, 412);
+    // console.log("spawn tree [" + this.trees.length + "] at " + this.lastTreePosition + " distance " + distance);
+  }
+
+  addSpike(x, y)
+  {
+    var spike = this.add.sprite(x, y, 'spike').setDepth(10);
+    this.spikes.add(spike);
+  }
+
+  generateTree(allowBanana)
   {
     var distance = this.minDistanceBetweenTrees;  
     var allowedGap = this.maxDistanceBetweenTrees - this.minDistanceBetweenTrees;
     var random = Math.round(Math.random() * allowedGap);
     // distance = distance + random;
     this.lastTreePosition = this.treeStartX + (this.trees.length * distance);
-    this.addTree(this.lastTreePosition, 10);
+    this.addTree(this.lastTreePosition, 10, allowBanana);
     // console.log("spawn tree [" + this.trees.length + "] at " + this.lastTreePosition + " distance " + distance);
+  }
+
+  addTree(x, y, allowBanana)
+  {
+    var tree = new Tree(
+      this, 
+      this.player,
+      constants.gridSize * x, 
+      constants.gridSize * y,
+      allowBanana
+    );
+    this.trees[this.trees.length] = tree;
+  }
+
+  addBranch(x, y, scaleX, scaleY)
+  {
+    var branch = this.add.sprite(
+                      constants.gridSize * x, 
+                      constants.gridSize * y, 
+                      'brown'
+                    )
+                    .setScale(scaleX, scaleY);
+    this.branches.add(branch);
   }
 
   addWorldBorders()
@@ -337,19 +516,28 @@ export class Game extends Phaser.Scene {
     // die when hit the left side off the screen
     this.worldBorderLeft = this.physics.add.staticGroup();
 
-    var sprite = this.add.sprite(constants.gridSize / 2, constants.gridSize * 5, 'red');
+    var sprite = this.add.sprite(0, constants.gridSize * 5, 'red');
     sprite.setScale(1, 10).setAlpha(0);
     this.worldBorderLeft.add(sprite);
 
-    this.physics.add.overlap(
+    this.physics.add.collider(
       this.player,
-      this.worldBorderLeft,
-      this.playerHitWorldBorderLeft,
-      () => {
-        return true;
-      },
-      this
+      this.worldBorderLeft
     );
+
+    if(this.isPracticeMode)
+    {
+      this.worldBorderRight = this.physics.add.staticGroup();
+
+      var sprite = this.add.sprite(constants.worldSize.width, constants.gridSize * 5, 'red');
+      sprite.setScale(1, 10).setAlpha(0);
+      this.worldBorderRight.add(sprite);
+
+      this.physics.add.collider(
+        this.player,
+        this.worldBorderRight
+      );
+    }
   }
 
   addUIText()
@@ -382,59 +570,12 @@ export class Game extends Phaser.Scene {
     //   20
     // ).setScrollFactor(0).setDepth(100);
 
-    this.playerStateText = this.add.bitmapText(
-      20,
-      20,
-      "arcade",
-      this.player.currentState,
-      20
-    ).setDepth(100);
-  }
-
-  playerHitWorldBorderLeft(player, border) {
-    if (!player.isDead()) {
-      // this.playAudio("holeshout");
-      // hole.setAlpha(1);
-      // player.setAlpha(0);
-      // this.cameras.main.shake(30);
-      if(player.body.velocity.x < 0)
-        player.turn();
-      // player.die();
-      // this.restartScene();
-    }
-  }
-
-  playerHitWorldBorderRight(player, border) {
-    if (!player.isDead()) {
-      // this.playAudio("holeshout");
-      // hole.setAlpha(1);
-      // player.setAlpha(0);
-      // this.cameras.main.shake(20);
-      player.turn();
-      // player.death();
-      // this.restartScene();
-    }
-  }
-
-  addTree(x, y)
-  {
-    var tree = new Tree(
-      this, 
-      this.player,
-      constants.gridSize * x, 
-      constants.gridSize * y
-    );
-    this.trees[this.trees.length] = tree;
-  }
-
-  addBranch(x, y, scaleX, scaleY)
-  {
-    var branch = this.add.sprite(
-                      constants.gridSize * x, 
-                      constants.gridSize * y, 
-                      'brown'
-                    )
-                    .setScale(scaleX, scaleY);
-    this.branches.add(branch);
+    // this.playerStateText = this.add.bitmapText(
+    //   20,
+    //   20,
+    //   "arcade",
+    //   this.player.currentState,
+    //   20
+    // ).setDepth(100);
   }
 }

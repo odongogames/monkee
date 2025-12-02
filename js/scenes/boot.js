@@ -16,6 +16,7 @@ export class Boot extends Phaser.Scene
     create ()
     {
         this.registry.set(constants.variableNames.soundEnabled, true);
+        this.registry.set(constants.variableNames.scoreToWin, constants.variables.scoreToWin);
         
         this.scene.start('Preloader');
     }

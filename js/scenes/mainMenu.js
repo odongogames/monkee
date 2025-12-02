@@ -22,13 +22,14 @@ export class MainMenu extends Phaser.Scene {
     // this.refImage.setDepth(1000);
     // this.refImage.setAlpha(0.25);
 
-    console.log(this.registry.list);
+    // console.log(this.registry.list);
   }
 
   startGame() {
     // console.log("Try start game");
     // return;
 
+    this.registry.set(constants.variableNames.gameMode, constants.gameMode.normal);
     // if (this.theme) this.theme.stop();
     this.scene.start("Game");
   }
@@ -36,7 +37,9 @@ export class MainMenu extends Phaser.Scene {
   startPractice() {
     // console.log("Try start practice");
 
-    this.scene.start("Practice");
+    this.registry.set(constants.variableNames.gameMode, constants.gameMode.practice);
+
+    this.scene.start("Game");
   }
 
   toggleSound() {
@@ -58,24 +61,24 @@ export class MainMenu extends Phaser.Scene {
     */
   showMainMenu() {
     var copyright = this.add
-      .bitmapText(this.center_width, 50, "arcade", "2025 (c) ODONGO GAMES", 18)
+      .bitmapText(this.center_width, 50, "arcade", "2025 (c) ODONGO GAMES", constants.textSizes.small)
       .setOrigin(0.5, 1)
       .setTint(constants.colors.darkbrown);
 
     var title = this.add
-      .bitmapText(this.center_width, 200, "arcade", "MONKEE", 112)
+      .bitmapText(this.center_width, 200, "arcade", "MONKEE", constants.textSizes.x_large)
       .setOrigin(0.5, 1)
       .setTint(constants.colors.darkbrown);
 
     this.playButton = new Button(
-        this,                 
-        this.center_width,    
-        270,
-        "PLAY",                  
-        constants.textSizes.large,                   
-        constants.colors.blue, 
-        constants.colors.darkbrown
-      );
+      this,                 
+      this.center_width,    
+      270,
+      "PLAY",                  
+      constants.textSizes.large,                   
+      constants.colors.blue, 
+      constants.colors.darkbrown
+    );
     this.playButton.background.on("pointerdown", () => {
       this.startGame();
     });

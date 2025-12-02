@@ -1,8 +1,8 @@
 
 // The length of the vector is square root of (x*x+y*y).
-function vec2magnitude (a, b)
+function vec2magnitude (vec2)
 {
-  return Math.sqrt((a * a + b * b));
+  return Math.sqrt((vec2.x * vec2.x + vec2.y * vec2.y));
 }
 
 function vec2divide (vec2, value)
@@ -23,6 +23,16 @@ function vec2add (vec2,  value)
 function vec2addvec2(a, b)
 {
   return { x: a.x + b.x, y: a.y + b.y };
+}
+
+function vec2subtract (vec2,  value)
+{
+  return { x: vec2.x - value, y: vec2.y - value };
+}
+
+function vec2subtractvec2 (a, b)
+{
+  return { x: a.x - b.x, y: a.y - b.y };
 }
 
 function vec2normalise(a, b)

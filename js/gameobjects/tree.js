@@ -1,26 +1,31 @@
 export class Tree extends Phaser.GameObjects.Container {
-	constructor(scene, player, x, y) {
+	constructor(scene, player, x, y, allowBanana) {
 		super(scene, x, y);
 		// this.setAlpha(0);
 		this.x = x;
 		this.y = y;
+		this.allowBanana = allowBanana;
 		this.scene = scene;
 
 		scene.add.existing(this);
 
+		this.branches = [];
+
 		this.addTrunk();
 		this.addTreeTop();
 		
-    if(Math.random(0, 1) < 0.25)
+    if(Math.random(0, 1) < 0.5)
     {
-			this.addRandomBranch(2, 2, 5, 4, 0.25);
+			this.branches[this.branches.length] = this.addRandomBranch(2, 2, 5, 4, 0.75);
     }
     else
     {
     	var random = Math.random();
 			var branch = this.addRandomBranch(2, 2, 3, 2, random);
-			random = branch.hasBanana ? 0 : 1 - random;
-			this.addRandomBranch(2, 2, 7, 2, random);
+			this.branches[this.branches.length] = branch;
+
+			random = this.hasBanana ? 0 : 1 - random;
+			this.branches[this.branches.length] = this.addRandomBranch(2, 2, 7, 2, random);
     }
 	}
 
@@ -57,8 +62,18 @@ export class Tree extends Phaser.GameObjects.Container {
 
     if(Math.random() < bananaChance)
     {
+    	if(!this.allowBanana)
+    	{
+    		return branch;
+    	}
+    	
+    	if(this.scene.isPracticeMode && this.scene.hasBanana)
+    	{
+    		return branch;
+    	}
+
     	this.addBanana(branch);
-    	branch.hasBanana = true;
+    	this.scene.hasBanana = true;
     }
 
     return branch;

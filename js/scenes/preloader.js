@@ -40,6 +40,7 @@ export class Preloader extends Phaser.Scene {
         this.load.setPath('assets/png');
 
         this.load.image('banana', 'banana.png');
+        this.load.image('blue_bg', 'blue_bg.png');
         this.load.image('branch-2', 'branch-2.png');
         this.load.image('branch-3', 'branch-3.png');
         this.load.image('branch-4', 'branch-4.png');
@@ -51,13 +52,18 @@ export class Preloader extends Phaser.Scene {
         this.load.image('monkey', 'monkee.png');
         this.load.image('pixel', 'pixel.png');
         this.load.image('red', 'red.png');
+        this.load.image('reset', 'reset.png');
         this.load.image('reticle', 'reticle.png');
+        this.load.image('spike', 'spike.png');
         this.load.image('treetop-4', 'treetop-4.png');
         this.load.image('treetop-5', 'treetop-5.png');
 
         this.load.setPath('assets/screens');
 
         this.load.image('main_menu', 'Monkee_main_menu.png');
+        this.load.image('help_one', 'Monkee_help.png');
+        this.load.image('game_over', 'Monkee_game_over.png');
+        this.load.image('win_screen', 'Monkee_win_screen.png');
     }
 
     loadFonts() {
