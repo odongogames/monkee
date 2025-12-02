@@ -1,3 +1,5 @@
+/// <reference path="../../types/phaser.d.ts" />
+
 import { Player } from '../gameobjects/player.js';
 import { PracticeUI } from '../gameobjects/practiceUI.js';
 import { Tree } from '../gameobjects/tree.js';
@@ -17,6 +19,7 @@ export class Game extends Phaser.Scene {
     this.timeLeft = constants.variables.totalPlayTime;
     this.lastPracticeTreeIndex = 1;
     this.registry.set(constants.variableNames.score, 0);
+    
     // console.log("World size: ", constants.worldSize);
     // console.log(Math);
 

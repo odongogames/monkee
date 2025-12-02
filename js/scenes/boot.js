@@ -1,3 +1,5 @@
+/// <reference path="../../types/phaser.d.ts" />
+
 export class Boot extends Phaser.Scene
 {
     constructor ()

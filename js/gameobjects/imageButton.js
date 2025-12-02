@@ -37,7 +37,7 @@ export class ImageButton extends Phaser.GameObjects.Container {
     this.leftIndicator.x -= this.image.displayWidth / 2 + 30;
     this.rightIndicator.x += this.image.displayWidth / 2 + 30;
 
-    this.image.setInteractive();
+    this.image.setInteractive({ cursor: 'pointer' });
 
     this.image.on("pointerover", () => {
       this.showIndicators();

@@ -54,7 +54,7 @@ export class Button extends Phaser.GameObjects.Container {
       'darkbrown'
     ).setScale(scaleX, scaleY).setDepth(99);
 
-    this.background.setInteractive();
+    this.background.setInteractive({ cursor: 'pointer' });
 
     this.background.on("pointerover", () => {
       this.showIndicators();

@@ -1,3 +1,5 @@
+/// <reference path="../../types/phaser.d.ts" />
+
 import { Button } from '../gameobjects/button.js';
 
 export class GameOver extends Phaser.Scene {

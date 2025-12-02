@@ -1,4 +1,3 @@
-
 // The length of the vector is square root of (x*x+y*y).
 function vec2magnitude (vec2)
 {

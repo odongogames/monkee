@@ -1,3 +1,5 @@
+/// <reference path="../../types/phaser.d.ts" />
+
 import { Button } from '../gameobjects/button.js';
 
 export class MainMenu extends Phaser.Scene {
@@ -66,9 +68,17 @@ export class MainMenu extends Phaser.Scene {
       .setTint(constants.colors.darkbrown);
 
     var title = this.add
-      .bitmapText(this.center_width, 200, "arcade", "MONKEE", constants.textSizes.x_large)
+      .bitmapText(this.center_width, 180, "big_arcade", "MONKEE", constants.textSizes.x_large * .725)
       .setOrigin(0.5, 1)
+      // .setAlpha(0.2)
       .setTint(constants.colors.darkbrown);
+
+    // var titleOrig = this.add
+    //   .bitmapText(this.center_width, 200, "arcade", "MONKEE", constants.textSizes.x_large)
+    //   .setOrigin(0.5, 1)
+    //   .setAlpha(0.2)
+    //   .setTint(constants.colors.darkbrown);
+
 
     this.playButton = new Button(
       this,                 

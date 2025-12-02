@@ -19,7 +19,7 @@ const constants =
 		small: 18
 	},
 	variables: {
-		scoreToWin: 8,
+		scoreToWin: 10,
 		totalPlayTime: 20
 	},
 	variableNames: {

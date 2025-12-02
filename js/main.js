@@ -1,3 +1,5 @@
+/// <reference path="../types/phaser.d.ts" />
+
 // import { Phaser } from "phaser";
 import { Boot } from './scenes/boot.js';
 import { Game } from './scenes/game.js';
@@ -23,6 +25,10 @@ const config = {
     },
   },
   plugins: {},
+  render: {
+    pixelArt: true,
+    // ...
+  },
   scene: [
     Boot,
     MainMenu,

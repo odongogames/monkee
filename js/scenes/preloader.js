@@ -1,3 +1,5 @@
+/// <reference path="../../types/phaser.d.ts" />
+
 export class Preloader extends Phaser.Scene {
     constructor() {
         super('Preloader');
@@ -73,6 +75,12 @@ export class Preloader extends Phaser.Scene {
           "arcade",
           "arcade.png",
           "arcade.xml"
+        );
+        
+        this.load.bitmapFont(
+          "big_arcade",
+          "arcade_0_0.png", //"arcade.png",
+          "arcade_0.fnt", //"arcade.xml"
         );
       }
 
