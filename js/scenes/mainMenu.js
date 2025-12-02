@@ -13,6 +13,8 @@ export class MainMenu extends Phaser.Scene {
     this.center_width = this.width / 2;
     this.center_height = this.height / 2;
 
+    this.loadAudios();
+
     // this.time.delayedCall(1000, () => this.showInstructions(), null, this);
 
     // this.input.keyboard.on("keydown-SPACE", () => this.startGame(), this);
@@ -55,7 +57,7 @@ export class MainMenu extends Phaser.Scene {
     this.soundButton.textObject.text = 
       this.registry.get(constants.variableNames.soundEnabled) ? "SOUND: ON" : "SOUND: OFF";
 
-    console.log("toggle sound: ", this.registry.get(constants.variableNames.soundEnabled));
+    // console.log("toggle sound: ", this.registry.get(constants.variableNames.soundEnabled));
   }
 
   /*
@@ -91,6 +93,7 @@ export class MainMenu extends Phaser.Scene {
     );
     this.playButton.background.on("pointerdown", () => {
       this.startGame();
+      // this.playAudio('select');
     });
 
     this.practiceButton = new Button(
@@ -104,6 +107,7 @@ export class MainMenu extends Phaser.Scene {
       );
     this.practiceButton.background.on("pointerdown", () => {
       this.startPractice();
+      // this.playAudio('select');
     });
 
     this.soundButton = new Button(
@@ -117,6 +121,7 @@ export class MainMenu extends Phaser.Scene {
       );
     this.soundButton.background.on("pointerdown", () => {
       this.toggleSound();
+      this.playAudio('select');
     });
     // this.tweens.add({
     //   targets: this.space,
@@ -139,5 +144,17 @@ export class MainMenu extends Phaser.Scene {
   //     loop: true,
   //     delay: 0,
   //   });
-  // }
+  // }  
+  loadAudios() {
+    this.audios = {
+      select: this.sound.add("select"),
+    }
+  };
+
+  playAudio(key) {
+    // console.log("Play ", key);
+    if(!this.registry.get(constants.variableNames.soundEnabled)) return;
+
+    this.audios[key].play();
+  }
 }

@@ -10,6 +10,8 @@ export class PracticeUI extends Phaser.GameObjects.Container {
     this.width = constants.worldSize.width;
     this.height = constants.worldSize.height;
     this.scene = scene;
+
+    this.loadAudios();
     // console.log(this);
 
     // this.refImage = this.scene.add.sprite(this.width / 2, this.height / 2, 'help_one');
@@ -77,6 +79,8 @@ export class PracticeUI extends Phaser.GameObjects.Container {
       constants.colors.darkbrown
     );
     this.leftButton.background.on("pointerdown", () => {
+      this.playAudio('select');
+      
       switch(this.currentState)
       {
         case this.states.home:
@@ -111,6 +115,7 @@ export class PracticeUI extends Phaser.GameObjects.Container {
       constants.colors.darkbrown
     );
     this.rightButton.background.on("pointerdown", () => {
+      this.playAudio('select');
       switch(this.currentState)
       {
         case this.states.home:
@@ -143,6 +148,7 @@ export class PracticeUI extends Phaser.GameObjects.Container {
     );
     this.resetButton.image.on("pointerdown", () => {
       scene.registry.set(constants.variableNames.gameMode, constants.gameMode.practice);
+      this.playAudio('jump');
 
       scene.scene.start("Game");
     });
@@ -212,5 +218,19 @@ export class PracticeUI extends Phaser.GameObjects.Container {
     this.rightButton.textObject.text = "HELP";
 
     this.currentState = this.states.home;
+  }
+
+  loadAudios() {
+    this.audios = {
+      jump: this.scene.sound.add("jump"),
+      select: this.scene.sound.add("select"),
+    }
+  };
+
+  playAudio(key) {
+    // console.log("Play ", key);
+    if(!this.scene.registry.get(constants.variableNames.soundEnabled)) return;
+
+    this.audios[key].play();
   }
 }

@@ -19,6 +19,12 @@ export class Game extends Phaser.Scene {
     this.timeLeft = constants.variables.totalPlayTime;
     this.lastPracticeTreeIndex = 1;
     this.registry.set(constants.variableNames.score, 0);
+
+    this.loadAudios();
+
+    this.ESC = this.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.ESC
+    );
     
     // console.log("World size: ", constants.worldSize);
     // console.log(Math);
@@ -214,15 +220,13 @@ export class Game extends Phaser.Scene {
         this.registry.get(constants.variableNames.score) + 1
       );
 
-      if(this.registry.get(constants.variableNames.score) >= this.bananaIcons.length)
-      {
-        this.scene.start("WinScreen");
-      }
-      else
+      if(this.registry.get(constants.variableNames.score) < this.bananaIcons.length)
       {
         this.bananaIcons[this.registry.get(constants.variableNames.score) - 1].visible = true;
       }
     }
+
+    this.playAudio('collect');
   }
 
   touchSpike()
@@ -253,11 +257,18 @@ export class Game extends Phaser.Scene {
 
     this.player.body.x = this.lastValidPlayerPosition.x;
     this.player.body.y = this.lastValidPlayerPosition.y - 10;
+    
+    this.playAudio('die');
   }
 
   update(timestep, delta) {
     // this.cameras.main.x += -0.5;
     // this.cameras.main.x = constants.worldSize.width / 3 - this.player.body.x ;
+    if (Phaser.Input.Keyboard.JustDown(this.ESC)) {
+      this.playAudio('die');
+      this.scene.start('MainMenu');
+    }
+
     if(!this.isPracticeMode)
     {
       this.timeLeft -= delta / 1000;
@@ -348,6 +359,8 @@ export class Game extends Phaser.Scene {
       case this.player.states.aiming:
         if(this.pointer.isDown)
         {
+          // console.log(this.pointer.position);
+
           this.reticle.x = this.player.body.x + this.player.body.width / 2;
           this.reticle.y = this.player.body.y + this.player.body.height / 2;
 
@@ -401,6 +414,8 @@ export class Game extends Phaser.Scene {
             this.throwDirection.y * -1 * this.normalisedAimDistance
           );
           this.player.currentState = this.player.states.jumping;
+
+          this.playAudio('jump');
           // console.log("Pointer up");
         }
       break;
@@ -580,5 +595,20 @@ export class Game extends Phaser.Scene {
     //   this.player.currentState,
     //   20
     // ).setDepth(100);
+  }
+
+  loadAudios() {
+    this.audios = {
+      collect: this.sound.add("collect"),
+      die: this.sound.add("die"),      
+      jump: this.sound.add("jump"),
+    }
+  };
+
+  playAudio(key) {
+    if(!this.registry.get(constants.variableNames.soundEnabled)) return;
+    // console.log("Play ", key);
+
+    this.audios[key].play();
   }
 }

@@ -18,6 +18,8 @@ export class GameOver extends Phaser.Scene {
     // this.refImage.setDepth(1000);
     // this.refImage.setAlpha(0.25);
 
+    this.loadAudios();
+
     var playerScore = this.registry.get(constants.variableNames.score); 
     var scoreToWin = this.registry.get(constants.variableNames.scoreToWin);
     this.spawningBananas = false;
@@ -41,6 +43,7 @@ export class GameOver extends Phaser.Scene {
       constants.colors.darkbrown
     );
     this.continueButton.background.on("pointerdown", () => {
+      this.playAudio('select');
       this.scene.start('MainMenu');
     });
   }
@@ -79,6 +82,7 @@ export class GameOver extends Phaser.Scene {
     this.bananas = []
     this.spawningBananas = true;
 
+    this.playAudio('win');
     this.spawnBanana();
   }
 
@@ -134,5 +138,21 @@ export class GameOver extends Phaser.Scene {
       .setOrigin(0.5, 1)
       .setTint(constants.colors.darkbrown);  
 
+    this.playAudio('done');
+  }
+
+  loadAudios() {
+    this.audios = {
+      done: this.sound.add("done"),      
+      select: this.sound.add("select"),
+      win: this.sound.add("win"),
+    }
+  };
+
+  playAudio(key) {
+    if(!this.registry.get(constants.variableNames.soundEnabled)) return;
+    // console.log("Play ", key);
+
+    this.audios[key].play();
   }
 }
