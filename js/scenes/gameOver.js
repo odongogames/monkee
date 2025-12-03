@@ -129,7 +129,7 @@ export class GameOver extends Phaser.Scene {
 
     var score = this.registry.get(constants.variableNames.score);
     var scoreText = this.add
-      .bitmapText(constants.worldSize.width / 2, 320, "arcade", score, constants.textSizes.xx_large)
+      .bitmapText(constants.worldSize.width / 2, 275, "big_arcade", score, constants.textSizes.xx_large)
       .setOrigin(0.5, 1)
       .setTint(constants.colors.darkbrown);
 

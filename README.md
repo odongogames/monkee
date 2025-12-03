@@ -1,6 +1,6 @@
 # MONKEE
 
-Monkee is a platformer game developed using the Phaser 3 game engine. Players control a monkey that jumps from tree to tree and collects bananas. The game is a side-scroller that goes from left to right. This game was made for the itch.io 20 second game jam (add link here). 
+Monkee is a platformer game developed using the Phaser 3 game engine. Players control a monkey that jumps from tree to tree and collects bananas. The game is a side-scroller that goes from left to right. This game was made for the itch.io 20 second game jam [link](https://odongo.itch.io/monkee). 
 
 
 ## Game Modes
@@ -22,7 +22,7 @@ In-game instructions can be accessed by pressing a button in the lower-rignt of 
 
 **Aiming**
 
-The monkey's aiming is not 100% accurate. To verify this, set { debug: true } in the Arcade physics section of js/main.js. Then set this.drawPath = false in the constructor of the Game class in js/scenes/game.js. When aiming, you will see that there is a blue line coming from Monkee that represents it's calculated path. Upon jumping you will notice that Monkee's jump does not completely follow the blue line.
+The monkey's aiming is not 100% accurate. To verify this, set ```{ debug: true }``` in the Arcade physics section of js/main.js. Then set ```this.drawPath = false``` in the constructor of the Game class in js/scenes/game.js. When aiming, you will see that there is a blue line coming from Monkee that represents it's calculated path. Upon jumping you will notice that Monkee's jump does not completely follow the blue line.
 
 **Mouse Position**
 

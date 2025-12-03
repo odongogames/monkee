@@ -10,10 +10,10 @@ export class Preloader extends Phaser.Scene {
     // this.add.image(512, 384, 'background');
 
     //  A simple progress bar. This is the outline of the bar.
-    this.add.rectangle(512, 384, 468, 32).setStrokeStyle(1, 0xffffff);
+    this.add.rectangle(constants.worldSize.width / 2, 284, 468, 32).setStrokeStyle(2, constants.colors.darkbrown);
 
     //  This is the progress bar itself. It will increase in size from the left based on the % of progress.
-    const bar = this.add.rectangle(512 - 230, 384, 4, 28, 0xffffff);
+    const bar = this.add.rectangle(constants.worldSize.width / 2 - 230, 284, 4, 28, constants.colors.darkbrown);
 
     //  Use the 'progress' event emitted by the LoaderPlugin to update the loading bar
     this.load.on('progress', (progress) => {
@@ -49,6 +49,7 @@ export class Preloader extends Phaser.Scene {
     this.load.image('branch-4', 'branch-4.png');
     this.load.image('brown', 'brown.png');
     this.load.image('darkbrown', 'darkbrown.png');
+    this.load.image('darkbrownwide', 'dark_brown_wide.png');
     this.load.image('green', 'green.png');
     this.load.image('grid', 'grid.png');
     this.load.image('indicator', 'indicator.png');
@@ -80,8 +81,8 @@ export class Preloader extends Phaser.Scene {
     
     this.load.bitmapFont(
       "big_arcade",
-      "arcade_0_0.png", //"arcade.png",
-      "arcade_0.fnt", //"arcade.xml"
+      "arcade_1_0.png", //"arcade_0_0.png", //"arcade.png",
+      "arcade_1.fnt" //"arcade_0.fnt", //"arcade.xml"
     );
   }
 
@@ -93,7 +94,8 @@ export class Preloader extends Phaser.Scene {
     this.load.audio("die", "die.mp3");
     this.load.audio("done", "done.mp3");
     this.load.audio("jump", "jump.mp3");
-    this.load.audio("select", "select.mp3");
+    // this.load.audio("select", "select.mp3");
+    this.load.audio("select", "select_2.mp3");
     this.load.audio("win", "win.mp3");
   }
 

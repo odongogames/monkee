@@ -11,7 +11,7 @@ const constants =
 	},
 	gridSize: 42,
 	textSizes : {
-		xx_large: 180,
+		xx_large: 120,
 		x_large: 112,
 		large: 44,
 		medium: 32,

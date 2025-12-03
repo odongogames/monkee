@@ -39,19 +39,28 @@ export class Button extends Phaser.GameObjects.Container {
 
     // console.log(this.textObject);
 
-    this.leftIndicator.x -= this.textObject.displayWidth / 2 + 30;
-    this.rightIndicator.x += this.textObject.displayWidth / 2 + 30;
+    var offset = this.textObject.displayWidth * 0.01;
+    this.leftIndicator.x -= this.textObject.displayWidth / 2 + 30 + offset;
+    this.rightIndicator.x += this.textObject.displayWidth / 2 + 30 + offset;
+
+    // console.log(this.textObject.displayWidth, this.leftIndicator.x);
 
     var scaleX = this.textObject.displayWidth / constants.gridSize;
     var scaleY = this.textObject.displayHeight / constants.gridSize;
 
+    // make background slightly bigger than text
     scaleY *= 1.2;
     scaleX *= 1.2;
+
+    // texture size has been doubled so halve it here
+    scaleX *= 0.1;
+
+    // console.log(scaleX, scaleY);
 
     this.background = this.scene.add.sprite(
       this.x,
       this.y, 
-      'darkbrown'
+      'darkbrownwide', //'darkbrown'
     ).setScale(scaleX, scaleY).setDepth(99);
 
     this.background.setInteractive({ cursor: 'pointer' });

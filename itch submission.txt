@@ -1,0 +1,41 @@
+Description
+
+You are Monkee. Jump from tree and tree and collect bananas. Don't touch the spikes.
+
+
+Instructions
+
+Jumping
+Click and drag mouse to start aiming. Release mouse to jump.
+
+Walking
+Press left arrow or A key to walk left. 
+Press right arrow or D key to walk right.
+
+Navigation
+Press the ESCAPE button to go back to the main menu.
+Click the SOUND button at the bottom of the main menu to toggle the sound.
+
+
+Game modes
+
+There are two game modes you can select from the main menu
+
+Normal (click play button)
+In normal play mode you have 20 seconds to jump through the trees and collect bananas. 
+There are spikes on the ground so watch out!
+
+Practice (click practice button)
+In practice mode you can jump around and practice your aiming and jumping. No spikes here.
+
+
+Tips:
+
+- Practice. Practice. Practice
+- You don't have to get every banana. Save time by skipping hard to reach
+- Don't forget to walk! 
+
+
+For Developers
+
+The game is made using the Phaser 3 game engine. Get the project files (here)
