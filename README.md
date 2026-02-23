@@ -1,6 +1,6 @@
 # MONKEE
 
-Monkee is a platformer game developed using the Phaser 3 game engine. Players control a monkey that jumps from tree to tree and collects bananas. The game is a side-scroller that goes from left to right. This game was made for the itch.io 20 second game jam [link](https://odongo.itch.io/monkee). 
+Monkee is a platformer game developed using the Phaser 3 game engine. Players control a monkey that jumps from tree to tree and collects bananas. The game is a side-scroller that goes from left to right. This game was made for the itch.io 20 second game jam [link]([https://odongo.itch.io/monkee](https://itch.io/jam/20-second-game-jam-2025/rate/4089181)). 
 
 
 ## Game Modes
